@@ -273,15 +273,111 @@ function TryIt({ label = "Try it with Claude", placeholder, defaultPrompt, syste
 
 // ---------- Agent diagrams (SVG) ----------
 function AgentDiagram({ kind }) {
-  if (kind === "augmented-llm") return <AugmentedLLM />;
-  if (kind === "prompt-chain") return <PromptChain />;
-  if (kind === "router") return <RouterPattern />;
-  if (kind === "parallel") return <Parallelization />;
-  if (kind === "orchestrator") return <Orchestrator />;
-  if (kind === "evaluator") return <EvaluatorOptimizer />;
-  if (kind === "agent-loop") return <AgentLoop />;
-  if (kind === "mcp-bus") return <MCPBus />;
+  if (kind === "augmented-llm")      return <AugmentedLLM />;
+  if (kind === "prompt-chain")       return <PromptChain />;
+  if (kind === "router")             return <RouterPattern />;
+  if (kind === "parallel")           return <Parallelization />;
+  if (kind === "orchestrator")       return <Orchestrator />;
+  if (kind === "evaluator")          return <EvaluatorOptimizer />;
+  if (kind === "agent-loop")         return <AgentLoop />;
+  if (kind === "mcp-bus")            return <MCPBus />;
+  if (kind === "course-orchestrator") return <CourseOrchestrator />;
   return null;
+}
+
+function CourseOrchestrator() {
+  return (
+    <div className="diagram">
+      <div className="diagram-title">The course orchestrator — how this site improves itself</div>
+      <svg viewBox="0 0 760 400" width="100%" style={{ display: "block" }}>
+        <defs>
+          <marker id="co-arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+            <path d="M0,0 L10,5 L0,10 Z" fill="#6B6A63" />
+          </marker>
+          <marker id="co-arr-sky" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+            <path d="M0,0 L10,5 L0,10 Z" fill="#4A6378" />
+          </marker>
+        </defs>
+        <g fontFamily="var(--sans)" fontSize="11" fill="#3B3A36">
+
+          {/* ── LEARNER ── */}
+          <rect x="20" y="160" width="110" height="50" rx="10" fill="#1F1E1B" />
+          <text x="75" y="181" textAnchor="middle" fill="#F0EBDF" fontWeight="500" fontSize="12">Learner</text>
+          <text x="75" y="197" textAnchor="middle" fill="#DED3BC" fontSize="10" fontFamily="var(--mono)">rating / chat</text>
+
+          {/* ── SUPABASE ── */}
+          <rect x="200" y="80" width="130" height="50" rx="10" fill="#F0EBDF" stroke="#1F1E1B" strokeOpacity="0.22" />
+          <text x="265" y="101" textAnchor="middle" fontWeight="500">Supabase</text>
+          <text x="265" y="117" textAnchor="middle" fill="#6B6A63" fontSize="10" fontFamily="var(--mono)">feedback table</text>
+
+          {/* ── SYNTHESIS AGENT ── */}
+          <rect x="200" y="240" width="130" height="50" rx="10" fill="#F0EBDF" stroke="#1F1E1B" strokeOpacity="0.22" />
+          <text x="265" y="261" textAnchor="middle" fontWeight="500">Synthesis</text>
+          <text x="265" y="277" textAnchor="middle" fill="#6B6A63" fontSize="10" fontFamily="var(--mono)">/api/synthesize</text>
+
+          {/* ── HITL PROPOSALS ── */}
+          <rect x="400" y="160" width="130" height="50" rx="10" fill="#F0EBDF" stroke="#1F1E1B" strokeOpacity="0.22" />
+          <text x="465" y="181" textAnchor="middle" fontWeight="500">HITL proposals</text>
+          <text x="465" y="197" textAnchor="middle" fill="#6B6A63" fontSize="10" fontFamily="var(--mono)">Supabase</text>
+
+          {/* ── ADMIN DASHBOARD ── */}
+          <rect x="400" y="310" width="130" height="50" rx="10" fill="#1F1E1B" />
+          <text x="465" y="331" textAnchor="middle" fill="#F0EBDF" fontWeight="500">Admin</text>
+          <text x="465" y="347" textAnchor="middle" fill="#DED3BC" fontSize="10" fontFamily="var(--mono)">approve / dismiss</text>
+
+          {/* ── GITHUB PR ── */}
+          <rect x="600" y="240" width="130" height="50" rx="10" fill="#F0EBDF" stroke="#1F1E1B" strokeOpacity="0.22" />
+          <text x="665" y="261" textAnchor="middle" fontWeight="500">GitHub PR</text>
+          <text x="665" y="277" textAnchor="middle" fill="#6B6A63" fontSize="10" fontFamily="var(--mono)">/api/apply</text>
+
+          {/* ── VERCEL DEPLOY ── */}
+          <rect x="600" y="310" width="130" height="50" rx="10" fill="#F0EBDF" stroke="#1F1E1B" strokeOpacity="0.22" />
+          <text x="665" y="331" textAnchor="middle" fontWeight="500">Vercel deploy</text>
+          <text x="665" y="347" textAnchor="middle" fill="#6B6A63" fontSize="10" fontFamily="var(--mono)">live update</text>
+
+          {/* ── CRON ── */}
+          <rect x="200" y="160" width="130" height="50" rx="10" fill="#F0EBDF" stroke="#D9A441" strokeWidth="1.5" strokeOpacity="0.6" />
+          <text x="265" y="181" textAnchor="middle" fontWeight="500">Vercel Cron</text>
+          <text x="265" y="197" textAnchor="middle" fill="#6B6A63" fontSize="10" fontFamily="var(--mono)">0 9 * * MON</text>
+
+          {/* ── ARROWS ── */}
+          {/* Learner → Supabase */}
+          <path d="M130 175 Q 165 105 200 105" stroke="#6B6A63" strokeWidth="1.2" fill="none" markerEnd="url(#co-arr)" />
+          <text x="150" y="128" fontFamily="var(--mono)" fontSize="9" fill="#9A988E">direct write</text>
+
+          {/* Supabase → Synthesis (threshold) */}
+          <path d="M265 130 L 265 160" stroke="#D9A441" strokeWidth="1.2" strokeDasharray="4,3" fill="none" markerEnd="url(#co-arr)" />
+
+          {/* Cron → Synthesis */}
+          <path d="M265 210 L 265 240" stroke="#D9A441" strokeWidth="1.2" fill="none" markerEnd="url(#co-arr)" />
+          <text x="270" y="228" fontFamily="var(--mono)" fontSize="9" fill="#D9A441">weekly</text>
+
+          {/* Synthesis → HITL proposals */}
+          <path d="M330 265 Q 380 265 400 185" stroke="#6B6A63" strokeWidth="1.2" fill="none" markerEnd="url(#co-arr)" />
+
+          {/* HITL → Admin */}
+          <path d="M465 210 L 465 310" stroke="#6B6A63" strokeWidth="1.2" fill="none" markerEnd="url(#co-arr)" />
+
+          {/* Admin → GitHub PR (trivial approve) */}
+          <path d="M530 335 Q 565 335 600 265" stroke="#4A6378" strokeWidth="1.5" fill="none" markerEnd="url(#co-arr-sky)" />
+          <text x="552" y="320" fontFamily="var(--mono)" fontSize="9" fill="#4A6378">trivial →</text>
+
+          {/* GitHub PR → Vercel */}
+          <path d="M665 290 L 665 310" stroke="#6B6A63" strokeWidth="1.2" fill="none" markerEnd="url(#co-arr)" />
+
+          {/* Vercel → Learner (loop back, dashed) */}
+          <path d="M600 335 Q 100 390 75 210" stroke="#6B6A63" strokeWidth="1" strokeDasharray="4,3" fill="none" markerEnd="url(#co-arr)" />
+
+          {/* Pattern labels */}
+          <text x="20" y="16" fontFamily="var(--mono)" fontSize="9" fill="#9A988E">Pattern labels → lessons where each node was introduced</text>
+          <text x="200" y="68" fontFamily="var(--mono)" fontSize="9" fill="#5B6A3A">Augmented LLM (L5)</text>
+          <text x="200" y="228" fontFamily="var(--mono)" fontSize="9" fill="#5B6A3A">Evaluator-Optimizer (L6)</text>
+          <text x="400" y="148" fontFamily="var(--mono)" fontSize="9" fill="#5B6A3A">HITL checkpoint (L7)</text>
+          <text x="600" y="228" fontFamily="var(--mono)" fontSize="9" fill="#4A6378">Orchestrator → sub-agent (L6)</text>
+        </g>
+      </svg>
+    </div>
+  );
 }
 
 function AugmentedLLM() {
@@ -524,5 +620,5 @@ function HeroCard({ eyebrow, title, lede, meta }) {
 
 Object.assign(window, {
   CodeBlock, CodeTabs, Callout, Quiz, Terminal, ChatMock, TryIt,
-  AgentDiagram, HeroCard, useInView,
+  AgentDiagram, HeroCard, useInView, CourseOrchestrator,
 });

@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/synthesize",
+      "schedule": "0 9 * * MON"
+    }
+  ]
+}

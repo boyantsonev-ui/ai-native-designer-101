@@ -26,10 +26,34 @@ function exportFeedbackJSON() {
 }
 
 function pushFeedback(item) {
-  const all = loadFeedback();
+  const all  = loadFeedback();
   const next = { ...item, id: crypto.randomUUID(), timestamp: new Date().toISOString(), synthesized: false };
   all.push(next);
   saveFeedback(all);
+
+  // Async write to Supabase (fire-and-forget; localStorage is the source of truth if offline)
+  if (window.__supabase) {
+    window.__supabase.from("feedback").insert({
+      lesson_id:    next.lessonId,
+      lesson_title: next.lessonTitle,
+      type:         next.type,
+      content:      next.content,
+      rating:       next.rating,
+      sentiment:    next.sentiment,
+    }).then(() => {
+      // Threshold trigger — fire synthesis if enough unseen items have accumulated
+      const unseen = all.filter(f => !f.synthesized).length;
+      const threshold = 15;
+      if (unseen >= threshold) {
+        fetch("/api/synthesize", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ trigger: "threshold" }),
+        }).catch(() => {});
+      }
+    }).catch(() => {});
+  }
+
   return all;
 }
 
@@ -240,11 +264,12 @@ const SEV = {
 // HITL Card
 // ─────────────────────────────────────────────────────────────────────────────
 
-function HITLCard({ proposal, onApprove, onDismiss }) {
+function HITLCard({ proposal, onApprove, onDismiss, onApplyAuto, applyBusy }) {
   const [expanded, setExpanded]   = useState(proposal.status === "pending");
-  const [note, setNote]           = useState(proposal.adminNote || "");
-  const sev = SEV[proposal.severity] || SEV.minor;
-  const done = proposal.status !== "pending";
+  const [note, setNote]           = useState(proposal.adminNote || proposal.admin_note || "");
+  const sev     = SEV[proposal.severity] || SEV.minor;
+  const done    = proposal.status !== "pending";
+  const applied = proposal.status === "applied";
 
   return (
     <div className={"hitl-card" + (done ? " hitl-done" : "")}>
@@ -270,12 +295,14 @@ function HITLCard({ proposal, onApprove, onDismiss }) {
           {done ? (
             <span
               className="sev-badge"
-              style={proposal.status === "approved"
-                ? { background: SEV.trivial.bg, color: SEV.trivial.color, borderColor: SEV.trivial.border }
-                : { background: "rgba(107,106,99,0.12)", color: "var(--ink-3)", borderColor: "rgba(107,106,99,0.25)" }
+              style={applied
+                ? { background: "rgba(74,99,120,0.12)", color: "#4A6378", borderColor: "rgba(74,99,120,0.30)" }
+                : proposal.status === "approved"
+                  ? { background: SEV.trivial.bg, color: SEV.trivial.color, borderColor: SEV.trivial.border }
+                  : { background: "rgba(107,106,99,0.12)", color: "var(--ink-3)", borderColor: "rgba(107,106,99,0.25)" }
               }
             >
-              {proposal.status === "approved" ? "✓ Approved" : "Dismissed"}
+              {applied ? "↗ Applied" : proposal.status === "approved" ? "✓ Approved" : "Dismissed"}
             </span>
           ) : (
             <span className="hitl-chevron">{expanded ? "▲" : "▼"}</span>
@@ -341,10 +368,42 @@ function HITLCard({ proposal, onApprove, onDismiss }) {
             </>
           )}
 
-          {done && proposal.adminNote && (
+          {proposal.status === "approved" && proposal.severity === "trivial" && onApplyAuto && (
+            <div className="hitl-actions" style={{ marginTop: 8 }}>
+              <button
+                className="btn"
+                style={{ borderColor: "#4A6378", color: "#4A6378" }}
+                onClick={onApplyAuto}
+                disabled={applyBusy}
+              >
+                {applyBusy ? "Opening PR…" : "Apply automatically →"}
+              </button>
+              <span className="mono" style={{ fontSize: 11, color: "var(--ink-4)" }}>
+                Opens a GitHub PR · you review &amp; merge
+              </span>
+            </div>
+          )}
+
+          {applied && (proposal.pr_url) && (
+            <div className="hitl-field" style={{ marginTop: 8 }}>
+              <div className="hitl-field-label mono">Pull request</div>
+              <a
+                href={proposal.pr_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "#4A6378", fontSize: 13 }}
+              >
+                {proposal.pr_url} ↗
+              </a>
+            </div>
+          )}
+
+          {done && (proposal.adminNote || proposal.admin_note) && (
             <div className="hitl-field" style={{ marginTop: 8 }}>
               <div className="hitl-field-label mono">Admin note</div>
-              <div className="hitl-field-value" style={{ color: "var(--ink-3)" }}>{proposal.adminNote}</div>
+              <div className="hitl-field-value" style={{ color: "var(--ink-3)" }}>
+                {proposal.adminNote || proposal.admin_note}
+              </div>
             </div>
           )}
         </div>
@@ -625,24 +684,55 @@ function RoutineScheduler({ onCronChange }) {
 // Admin Dashboard modal
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Remap Supabase snake_case row → camelCase shape used throughout the UI
+function remapRow(f) {
+  if (!f.lesson_id) return f; // already camelCase (localStorage row)
+  return {
+    ...f,
+    lessonId:    f.lesson_id,
+    lessonTitle: f.lesson_title,
+    created_at:  f.created_at,
+    timestamp:   f.created_at,
+  };
+}
+
 function AdminDashboard({ onClose }) {
-  const [feedback,   setFeedback]   = useState(loadFeedback);
-  const [syntheses,  setSyntheses]  = useState(loadSyntheses);
+  const [feedback,   setFeedback]   = useState(() => loadFeedback());
+  const [syntheses,  setSyntheses]  = useState(() => loadSyntheses());
+  const [proposals,  setProposals]  = useState([]);
   const [view,       setView]       = useState("overview");
   const [synthBusy,  setSynthBusy]  = useState(false);
   const [synthError, setSynthError] = useState("");
   const [lessonFilter, setLessonFilter] = useState("all");
+  const [applyBusy,  setApplyBusy]  = useState(null); // proposalId being applied
+
+  // Load live data from Supabase on mount when available
+  useEffect(() => {
+    if (!window.__supabase) return;
+    Promise.all([
+      window.__supabase.from("feedback").select("*").order("created_at", { ascending: false }),
+      window.__supabase.from("hitl_proposals").select("*").order("created_at", { ascending: false }),
+      window.__supabase.from("syntheses").select("*").order("created_at", { ascending: false }),
+    ]).then(([fbRes, propRes, synthRes]) => {
+      if (fbRes.data && fbRes.data.length > 0)   setFeedback(fbRes.data.map(remapRow));
+      if (propRes.data)  setProposals(propRes.data);
+      if (synthRes.data) setSyntheses(synthRes.data);
+    });
+  }, []);
 
   // Routine schedule — kept in sync with RoutineScheduler via callback
-  const initSched  = loadRoutineSettings() || { frequency:"weekly", dayOfWeek:1, dayOfMonth:1, hour:9, minute:0 };
-  const initCron   = initSched.minute + " " + initSched.hour + (initSched.frequency==="monthly" ? " "+initSched.dayOfMonth+" * *" : initSched.frequency==="weekly" ? " * * MON" : " * * *");
-  const [routineCron,  setRoutineCron]  = useState(initCron);
+  const [routineCron,  setRoutineCron]  = useState("0 9 * * MON");
   const [routineHuman, setRoutineHuman] = useState("Every Monday at 09:00");
 
-  const unseen   = feedback.filter(f => !f.synthesized);
-  const allCards = syntheses.flatMap(s =>
-    (s.proposals || []).map(p => ({ ...p, _synthId: s.id, _synthDate: s.timestamp }))
-  );
+  const unseen = feedback.filter(f => !f.synthesized);
+
+  // Build allCards from Supabase proposals (primary) falling back to embedded syntheses.proposals
+  const allCards = proposals.length > 0
+    ? proposals.map(p => ({ ...p, _synthId: p.synthesis_id, _synthDate: p.created_at }))
+    : syntheses.flatMap(s =>
+        (s.proposals || []).map(p => ({ ...p, _synthId: s.id, _synthDate: s.timestamp }))
+      );
+
   const pendingCount = allCards.filter(c => c.status === "pending").length;
   const latestSynth  = syntheses[syntheses.length - 1];
 
@@ -669,12 +759,39 @@ function AdminDashboard({ onClose }) {
     setSynthBusy(true);
     setSynthError("");
     try {
+      // If Supabase is wired up, delegate to the serverless function which uses the Claude API
+      if (window.__supabase) {
+        const res = await fetch("/api/synthesize", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ trigger: "manual" }),
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error || "Synthesis API failed");
+        if (json.skipped) {
+          setSynthError("Nothing new to synthesize.");
+          return;
+        }
+        // Reload proposals and feedback from Supabase
+        const [fbRes, propRes, synthRes] = await Promise.all([
+          window.__supabase.from("feedback").select("*").order("created_at", { ascending: false }),
+          window.__supabase.from("hitl_proposals").select("*").order("created_at", { ascending: false }),
+          window.__supabase.from("syntheses").select("*").order("created_at", { ascending: false }),
+        ]);
+        if (fbRes.data)   setFeedback(fbRes.data.map(remapRow));
+        if (propRes.data) setProposals(propRes.data);
+        if (synthRes.data) setSyntheses(synthRes.data);
+        setView("hitl");
+        return;
+      }
+
+      // Fallback: local synthesis via window.claude.complete (offline / no Supabase)
       const payload = unseen.map(f => ({
         lesson: `${f.lessonId}: ${f.lessonTitle}`,
         type: f.type,
         rating: f.rating,
         comment: f.content,
-        date: f.timestamp.slice(0, 10),
+        date: (f.timestamp || f.created_at || "").slice(0, 10),
       }));
 
       const prompt =
@@ -714,7 +831,6 @@ Group related feedback into one proposal rather than many tiny ones. Omit noise.
         proposals = m ? JSON.parse(m[0]) : [];
       } catch { proposals = []; }
 
-      // Mark feedback as synthesized
       const markedFeedback = feedback.map(f =>
         unseen.find(u => u.id === f.id) ? { ...f, synthesized: true } : f
       );
@@ -732,7 +848,7 @@ Group related feedback into one proposal rather than many tiny ones. Omit noise.
       setSyntheses(nextSyntheses);
       setView("hitl");
     } catch (e) {
-      setSynthError("Synthesis failed — make sure Claude is available in this context (window.claude.complete).");
+      setSynthError("Synthesis failed — " + (e.message || "check that /api/synthesize is reachable or window.claude.complete is available."));
     } finally {
       setSynthBusy(false);
     }
@@ -740,17 +856,47 @@ Group related feedback into one proposal rather than many tiny ones. Omit noise.
 
   // ── Proposal actions ───────────────────────────────────────────────────────
   const updateProposal = (synthId, proposalId, status, adminNote) => {
+    // Write to Supabase if available
+    if (window.__supabase) {
+      window.__supabase.from("hitl_proposals")
+        .update({ status, admin_note: adminNote, reviewed_at: new Date().toISOString() })
+        .eq("id", proposalId)
+        .then(() => {
+          setProposals(prev => prev.map(p => p.id === proposalId ? { ...p, status, admin_note: adminNote } : p));
+        });
+    }
+    // Always update localStorage-backed syntheses as fallback
     const next = syntheses.map(s => {
       if (s.id !== synthId) return s;
       return {
         ...s,
-        proposals: s.proposals.map(p =>
+        proposals: (s.proposals || []).map(p =>
           p.id === proposalId ? { ...p, status, adminNote } : p
         ),
       };
     });
     saveSyntheses(next);
     setSyntheses(next);
+    // Also reflect in proposals list (for Supabase-sourced cards)
+    setProposals(prev => prev.map(p => p.id === proposalId ? { ...p, status, admin_note: adminNote } : p));
+  };
+
+  const applyProposal = async (proposalId) => {
+    setApplyBusy(proposalId);
+    try {
+      const res  = await fetch("/api/apply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ proposalId }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Apply failed");
+      setProposals(prev => prev.map(p => p.id === proposalId ? { ...p, status: "applied", pr_url: json.prUrl } : p));
+    } catch (e) {
+      alert("Auto-apply failed: " + e.message);
+    } finally {
+      setApplyBusy(null);
+    }
   };
 
   // ── Filtered list for feedback view ───────────────────────────────────────
@@ -986,6 +1132,8 @@ Group related feedback into one proposal rather than many tiny ones. Omit noise.
                             proposal={card}
                             onApprove={note => updateProposal(card._synthId, card.id, "approved", note)}
                             onDismiss={note => updateProposal(card._synthId, card.id, "dismissed", note)}
+                            onApplyAuto={window.__supabase ? () => applyProposal(card.id) : null}
+                            applyBusy={applyBusy === card.id}
                           />
                         ))}
                       </div>
@@ -1002,20 +1150,20 @@ Group related feedback into one proposal rather than many tiny ones. Omit noise.
               <div className="callout do" style={{ marginBottom: 24 }}>
                 <div className="callout-icon">→</div>
                 <div>
-                  <strong>This course improves itself with a routine</strong>
+                  <strong>Automated learning loop — always on</strong>
                   <p style={{ margin: "4px 0 0" }}>
-                    A Claude Code command file reads exported feedback JSON, synthesises it weekly, and produces the HITL proposals you see in the HITL tab. This page shows you the routine, lets you export the data, and explains how to run or schedule it — using the course as its own worked example.
+                    Feedback is written directly to Supabase. A Vercel Cron job synthesises it every Monday at 9am via the Claude API. When you approve a trivial proposal in the HITL tab, one click opens a GitHub PR — review the Vercel preview and merge to ship the fix.
                   </p>
                 </div>
               </div>
 
-              {/* Routine status card */}
-              <div className="admin-section-hd mono">Routine · feedback-synthesis</div>
+              {/* Pipeline status card */}
+              <div className="admin-section-hd mono">Pipeline status</div>
               <div className="routine-card">
                 <div className="routine-card-meta">
-                  <span className="chip dot" style={{ fontSize: 10 }}>active</span>
+                  <span className="chip dot" style={{ fontSize: 10 }}>{window.__supabase ? "live" : "localStorage fallback"}</span>
                   <span className="mono" style={{ color: "var(--ink-3)", fontSize: 11 }}>
-                    .claude/commands/feedback-synthesis.md
+                    {window.__supabase ? "Supabase + Vercel Cron + Claude API" : "Configure SUPABASE_URL in app.jsx to activate"}
                   </span>
                 </div>
                 <div className="routine-card-body">
@@ -1023,6 +1171,10 @@ Group related feedback into one proposal rather than many tiny ones. Omit noise.
                     <div className="routine-stat">
                       <div className="routine-stat-n">{feedback.length}</div>
                       <div className="routine-stat-label">total responses</div>
+                    </div>
+                    <div className="routine-stat">
+                      <div className="routine-stat-n">{unseen.length}</div>
+                      <div className="routine-stat-label">awaiting synthesis</div>
                     </div>
                     <div className="routine-stat">
                       <div className="routine-stat-n">{syntheses.length}</div>
@@ -1035,105 +1187,61 @@ Group related feedback into one proposal rather than many tiny ones. Omit noise.
                   </div>
                   {latestSynth && (
                     <p className="mono" style={{ fontSize:11, color:"var(--ink-4)", margin:"10px 0 0" }}>
-                      Last run: {new Date(latestSynth.timestamp).toLocaleDateString("en-GB", { day:"numeric", month:"short", year:"numeric" })}
+                      Last synthesis: {new Date(latestSynth.timestamp || latestSynth.created_at).toLocaleDateString("en-GB", { day:"numeric", month:"short", year:"numeric" })}
+                      {" · "}{latestSynth.feedbackCount || latestSynth.feedback_count} items
                     </p>
                   )}
-                  <RoutineScheduler onCronChange={(c, h) => { setRoutineCron(c); setRoutineHuman(h); }} />
+                  <div style={{ marginTop: 16 }}>
+                    <button
+                      className="btn btn-clay"
+                      onClick={runSynthesis}
+                      disabled={synthBusy || unseen.length < 1}
+                    >
+                      {synthBusy ? "Synthesizing…" : unseen.length > 0 ? `Run synthesis now →` : "Nothing new to synthesize"}
+                    </button>
+                  </div>
+                  {synthError && (
+                    <p className="mono" style={{ color: "var(--clay)", fontSize: 12, marginTop: 8 }}>{synthError}</p>
+                  )}
                 </div>
               </div>
 
-              {/* Export */}
-              <div className="admin-section-hd mono" style={{ marginTop: 28 }}>Step 1 — export data for the routine</div>
-              <div className="export-card">
-                <div className="export-card-text">
-                  <strong>Export feedback.json</strong>
-                  <p>
-                    The routine reads feedback from a file — not from <code>localStorage</code> (which is browser-only). Export here, then place the file at <code>.claude/outputs/feedback.json</code> before running the routine.
-                  </p>
-                  {feedback.length === 0 && (
-                    <p className="mono" style={{ color: "var(--ink-4)", fontSize: 11, marginTop: 6 }}>
-                      No feedback yet — submit a rating on any lesson to generate data.
-                    </p>
-                  )}
-                </div>
-                <button className="btn btn-clay" onClick={exportFeedbackJSON} disabled={feedback.length === 0}>
-                  Export feedback.json →
-                </button>
-              </div>
-
-              {/* Command file preview */}
-              <div className="admin-section-hd mono" style={{ marginTop: 28 }}>Step 2 — the command file</div>
+              {/* Vercel Cron config */}
+              <div className="admin-section-hd mono" style={{ marginTop: 28 }}>Cron schedule · vercel.json</div>
               <p style={{ fontSize: 13, color: "var(--ink-2)", marginBottom: 12 }}>
-                This is the actual file at <code>.claude/commands/feedback-synthesis.md</code>. It is a Claude Code custom command with a built-in cron schedule. Read it, fork it, make it your own.
+                The weekly synthesis runs automatically via Vercel Cron. Edit <code>vercel.json</code> at the repo root to change the schedule.
               </p>
               <div className="code">
                 <div className="code-head">
                   <span><span className="dots"><i></i><i></i><i></i></span></span>
-                  <span style={{ marginLeft: "auto" }}>.claude/commands/feedback-synthesis.md</span>
+                  <span style={{ marginLeft: "auto" }}>vercel.json</span>
                 </div>
                 <div className="code-body">
                   <pre style={{ margin: 0, whiteSpace: "pre", fontSize: "12px", lineHeight: 1.65, color: "var(--code-ink)" }}>{[
-"---",
-"description: Weekly synthesis of learner feedback. Reads exported feedback JSON,",
-"  runs analysis, and outputs ranked HITL improvement proposals.",
-"schedule: " + routineCron,
-"output: .claude/outputs/synthesis-{{date}}.md",
-"---",
-"",
-"# Feedback synthesis",
-"",
-"## Steps",
-"1. Read .claude/outputs/feedback.json (error + stop if missing)",
-"2. Filter synthesized === false (stop if none)",
-"3. Group by lessonId; find: recurring confusion, low ratings",
-"   with comments, chat questions that reveal gaps",
-"4. Output JSON proposals (severity: trivial / minor / major)",
-"5. Write to output file; print summary:",
-"   N proposals (X trivial * Y minor * Z major)",
+`{`,
+`  "crons": [`,
+`    {`,
+`      "path": "/api/synthesize",`,
+`      "schedule": "0 9 * * MON"`,
+`    }`,
+`  ]`,
+`}`,
 ].join("\n")}</pre>
                 </div>
               </div>
 
-              {/* Run options */}
-              <div className="admin-section-hd mono" style={{ marginTop: 28 }}>Step 3 — run it</div>
-              <div className="run-options">
-                <div>
-                  <div className="run-option-label">Manual (one-off)</div>
-                  <div className="code">
-                    <div className="code-head">
-                      <span><span className="dots"><i></i><i></i><i></i></span></span>
-                      <span style={{ marginLeft: "auto" }}>bash</span>
-                    </div>
-                    <div className="code-body">
-                      <pre style={{ margin: 0, fontSize: "12px", lineHeight: 1.65 }}>{[
-"# 1. Export from the button above",
-"# 2. Move to the right place:",
-"mv ~/Downloads/feedback-export-*.json \\",
-"  /path/to/course/.claude/outputs/feedback.json",
-"",
-"# 3. Run:",
-"claude run feedback-synthesis",
-].join("\n")}</pre>
-                    </div>
-                  </div>
+              {/* Export fallback */}
+              <div className="admin-section-hd mono" style={{ marginTop: 28 }}>Data portability — export backup</div>
+              <div className="export-card">
+                <div className="export-card-text">
+                  <strong>Export feedback.json</strong>
+                  <p>
+                    Download a full backup of all feedback and syntheses from this browser's localStorage. Useful if Supabase isn't configured yet or as an offline copy.
+                  </p>
                 </div>
-                <div>
-                  <div className="run-option-label">Scheduled (via MCP)</div>
-                  <div className="code">
-                    <div className="code-head">
-                      <span><span className="dots"><i></i><i></i><i></i></span></span>
-                      <span style={{ marginLeft: "auto" }}>Claude Desktop chat</span>
-                    </div>
-                    <div className="code-body">
-                      <pre style={{ margin: 0, fontSize: "12px", lineHeight: 1.65 }}>{[
-"Schedule my feedback-synthesis routine",
-"to run every Monday at 9am.",
-"Use the scheduled-tasks MCP.",
-"Working directory: /path/to/course",
-].join("\n")}</pre>
-                    </div>
-                  </div>
-                </div>
+                <button className="btn btn-clay" onClick={exportFeedbackJSON} disabled={feedback.length === 0}>
+                  Export feedback.json →
+                </button>
               </div>
 
             </div>

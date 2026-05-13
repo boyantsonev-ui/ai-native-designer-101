@@ -1,5 +1,17 @@
 // Main app shell — sidebar, progress, navigation, modals, learning loop
 
+// ── Supabase client (anon key is safe to expose; RLS enforces access)
+// Replace these with your project values after creating the Supabase project.
+const SUPABASE_URL      = "https://YOUR_PROJECT.supabase.co";
+const SUPABASE_ANON_KEY = "YOUR_ANON_KEY";
+
+if (
+  typeof window.supabase !== "undefined" &&
+  SUPABASE_URL !== "https://YOUR_PROJECT.supabase.co"
+) {
+  window.__supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+}
+
 const LESSONS = [
   { group: "Intro", items: [
     { id: 1,  title: "The future of designers", time: "5 min", Comp: () => <Lesson1 /> },
@@ -23,6 +35,9 @@ const LESSONS = [
     { id: 11, title: "Deploy to GitHub & Vercel", time: "5 min", Comp: () => <Lesson11 /> },
     { id: 12, title: "Measure with PostHog · Clarity · Hotjar", time: "6 min", Comp: () => <Lesson12 /> },
     { id: 13, title: "Wrap-up & cheat sheet", time: "2 min", Comp: ({ onOpenCheatSheet }) => <Lesson13 onOpenCheatSheet={onOpenCheatSheet} /> },
+  ]},
+  { group: "Meta", items: [
+    { id: 14, title: "The course that teaches itself", time: "4 min", Comp: () => <Lesson14 /> },
   ]},
 ];
 
