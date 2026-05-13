@@ -43,7 +43,7 @@ function pushFeedback(item) {
     }).then(() => {
       // Threshold trigger — fire synthesis if enough unseen items have accumulated
       const unseen = all.filter(f => !f.synthesized).length;
-      const threshold = 15;
+      const threshold = 10;
       if (unseen >= threshold) {
         fetch("/api/synthesize", {
           method: "POST",
