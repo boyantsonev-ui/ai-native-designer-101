@@ -420,7 +420,7 @@ function HITLCard({ proposal, onApprove, onDismiss, onApplyAuto, applyBusy }) {
 //     .then(b => console.log([...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')))
 // ─────────────────────────────────────────────────────────────────────────────
 
-const ADMIN_HASH    = "8564462a9203bd98b845f6444317adc50a7ea04a2adc803ab294dd5a0784d5eb";
+const ADMIN_HASH    = "8ae0ce71a1627cbff3f7bee95c6829ca53d549eb76c440108752d33ad7b51d92";
 const ADMIN_SESSION = "ai-native-101::admin";
 
 function AdminGate({ onUnlock, onCancel }) {
