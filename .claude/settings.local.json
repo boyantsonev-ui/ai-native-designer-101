@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:api.anthropic.com)",
+      "Bash(tar -xf design)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(mkdir -p \"/Users/boyan.tsonev/AI-Native Designer 101/.claude/commands\")",
+      "Bash(mkdir -p \"/Users/boyan.tsonev/AI-Native Designer 101/.claude/outputs\")"
+    ]
+  }
+}
