@@ -126,30 +126,204 @@ hitl_proposals (id, synthesis_id, lesson_id, severity,
       <section>
         <h2>Setup checklist</h2>
         <p>
-          The architecture is deployed when you complete these steps. Until then the system falls back gracefully to localStorage and local synthesis via <code>window.claude.complete</code>.
+          The architecture is live when you complete these six steps. Until then the system falls back gracefully to localStorage and local synthesis via <code>window.claude.complete</code>.
         </p>
-        <div className="cheat-card" style={{ marginTop: 16 }}>
-          <div className="cc-item">
+
+        {/* ── Step 1: Supabase ── */}
+        <div className="cheat-card" style={{ marginTop: 24 }}>
+          <div className="cc-item" style={{ gridColumn: "1 / -1" }}>
             <div className="eyebrow">Step 1</div>
-            <h4>Create a Supabase project</h4>
-            <p>Run the three <code>CREATE TABLE</code> statements and RLS policies from the plan. Copy the project URL and anon key into <code>app.jsx</code> (<code>SUPABASE_URL</code> / <code>SUPABASE_ANON_KEY</code>).</p>
-          </div>
-          <div className="cc-item">
-            <div className="eyebrow">Step 2</div>
-            <h4>Add env vars to Vercel</h4>
-            <p>In Vercel project settings → Environment Variables, add: <code>ANTHROPIC_API_KEY</code>, <code>SUPABASE_URL</code>, <code>SUPABASE_SERVICE_ROLE_KEY</code>, <code>GITHUB_TOKEN</code>, <code>GITHUB_OWNER</code>, <code>GITHUB_REPO</code>.</p>
-          </div>
-          <div className="cc-item">
-            <div className="eyebrow">Step 3</div>
-            <h4>Deploy</h4>
-            <p>Push to GitHub. Vercel auto-detects <code>vercel.json</code> and the <code>/api</code> folder. The cron and serverless functions are live on first deploy. Submit a test rating to verify the Supabase write.</p>
-          </div>
-          <div className="cc-item">
-            <div className="eyebrow">Step 4</div>
-            <h4>Open the admin dashboard</h4>
-            <p>Click the "AI-Native Designer 101" brand logo five times → enter your admin password → Automations tab shows pipeline status. Run a manual synthesis to generate your first HITL proposals.</p>
+            <h4>Create a Supabase project &amp; run the schema</h4>
+            <p>Go to <strong>supabase.com → New project</strong>. Once it's provisioned, open the <strong>SQL Editor</strong> and run these three tables in order:</p>
           </div>
         </div>
+
+        <CodeTabs files={[
+          {
+            name: "feedback",
+            lang: "sql",
+            code: `CREATE TABLE feedback (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  lesson_id    INT,
+  lesson_title TEXT,
+  type         TEXT,        -- 'rating' or 'chat'
+  rating       INT,         -- 1–5 (null for chat entries)
+  content      TEXT,
+  sentiment    TEXT,        -- 'positive' | 'neutral' | 'negative'
+  synthesized  BOOLEAN DEFAULT false,
+  session_id   TEXT,
+  created_at   TIMESTAMP DEFAULT now()
+);
+
+-- Allow anonymous browser inserts (RLS must be enabled)
+ALTER TABLE feedback ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "anon insert" ON feedback
+  FOR INSERT TO anon WITH CHECK (true);`,
+          },
+          {
+            name: "syntheses",
+            lang: "sql",
+            code: `CREATE TABLE syntheses (
+  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  feedback_count INT,
+  trigger        TEXT,   -- 'threshold' | 'manual' | 'cron'
+  status         TEXT,   -- 'running' | 'complete' | 'failed'
+  error          TEXT,
+  created_at     TIMESTAMP DEFAULT now()
+);
+
+-- Only service_role (server-side) can read or write
+ALTER TABLE syntheses ENABLE ROW LEVEL SECURITY;`,
+          },
+          {
+            name: "hitl_proposals",
+            lang: "sql",
+            code: `CREATE TABLE hitl_proposals (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  synthesis_id  UUID REFERENCES syntheses(id),
+  lesson_id     INT,
+  lesson_title  TEXT,
+  severity      TEXT,   -- 'trivial' | 'minor' | 'major'
+  type          TEXT,   -- 'typo' | 'accuracy' | 'clarification' | 'example' | 'structure'
+  title         TEXT,
+  problem       TEXT,
+  proposal      TEXT,
+  reasoning     TEXT,
+  feedback_count INT,
+  status        TEXT DEFAULT 'pending',  -- 'pending' | 'approved' | 'dismissed' | 'applied'
+  admin_note    TEXT,
+  pr_url        TEXT,
+  reviewed_at   TIMESTAMP,
+  created_at    TIMESTAMP DEFAULT now()
+);
+
+ALTER TABLE hitl_proposals ENABLE ROW LEVEL SECURITY;`,
+          },
+        ]} />
+
+        <Callout kind="tip" title="Where to find your keys">
+          <p>In Supabase: <strong>Settings → API</strong>. Copy three things: <strong>Project URL</strong>, <strong>anon / public key</strong> (goes into <code>app.jsx</code>), and <strong>service_role key</strong> (goes into Vercel — never commit it). The anon key is safe in client code because RLS prevents browsers from reading proposals.</p>
+        </Callout>
+
+        {/* ── Step 2: GitHub token ── */}
+        <div className="cheat-card" style={{ marginTop: 32 }}>
+          <div className="cc-item" style={{ gridColumn: "1 / -1" }}>
+            <div className="eyebrow">Step 2</div>
+            <h4>Create a GitHub fine-grained token</h4>
+            <p>Go to <strong>GitHub → Settings → Developer settings → Fine-grained personal access tokens → Generate new token</strong>. Scope it to your course repo only, with these repository permissions:</p>
+          </div>
+        </div>
+
+        <CodeBlock lang="text" filename="Required token permissions">
+{`Contents       → Read and write   (fetch files, commit edits)
+Pull requests  → Read and write   (open auto-fix PRs)
+Metadata       → Read-only        (required by GitHub for all tokens)`}
+        </CodeBlock>
+
+        <Callout kind="warn" title="Scope it to one repo">
+          The token only needs access to your course repo. Granting access to all repositories gives the auto-apply sub-agent unnecessary reach — scope it narrowly.
+        </Callout>
+
+        {/* ── Step 3: Vercel env vars ── */}
+        <div className="cheat-card" style={{ marginTop: 32 }}>
+          <div className="cc-item" style={{ gridColumn: "1 / -1" }}>
+            <div className="eyebrow">Step 3</div>
+            <h4>Add environment variables in Vercel</h4>
+            <p>Go to <strong>Vercel project → Settings → Environment Variables</strong>. Add all seven — they apply to all environments (Production, Preview, Development):</p>
+          </div>
+        </div>
+
+        <CodeBlock lang="bash" filename="Vercel environment variables">
+{`ANTHROPIC_API_KEY          # sk-ant-... from console.anthropic.com
+SUPABASE_URL               # https://xxxx.supabase.co
+SUPABASE_SERVICE_ROLE_KEY  # from Supabase Settings → API → service_role
+GITHUB_TOKEN               # fine-grained PAT from Step 2
+GITHUB_OWNER               # your GitHub username or org name
+GITHUB_REPO                # repo name only — not the full URL
+SYNTHESIS_THRESHOLD        # optional — omit to use the default of 15`}
+        </CodeBlock>
+
+        <Callout kind="note" title="SUPABASE_ANON_KEY is different">
+          The anon key lives in <code>app.jsx</code> as a client-side constant — it is not a Vercel env var. The service_role key above is the elevated server-side key used by <code>/api/synthesize</code> and <code>/api/apply</code>. Do not mix them up.
+        </Callout>
+
+        {/* ── Step 4: Wire app.jsx ── */}
+        <div className="cheat-card" style={{ marginTop: 32 }}>
+          <div className="cc-item" style={{ gridColumn: "1 / -1" }}>
+            <div className="eyebrow">Step 4</div>
+            <h4>Update <code>app.jsx</code> with your Supabase client credentials</h4>
+            <p>At the top of <code>app.jsx</code>, replace the two placeholder constants with the values from your Supabase project:</p>
+          </div>
+        </div>
+
+        <CodeBlock lang="js" filename="app.jsx — lines 3–4">
+{`const SUPABASE_URL      = "https://your-project-id.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGci...your-anon-key-here";`}
+        </CodeBlock>
+
+        <Callout kind="tip" title="Safe to commit">
+          The anon key is designed to be public. Supabase RLS ensures browsers can only INSERT rows into <code>feedback</code> — they cannot read proposals or syntheses. Commit it freely.
+        </Callout>
+
+        {/* ── Step 5: Deploy ── */}
+        <div className="cheat-card" style={{ marginTop: 32 }}>
+          <div className="cc-item" style={{ gridColumn: "1 / -1" }}>
+            <div className="eyebrow">Step 5</div>
+            <h4>Push to GitHub — Vercel does the rest</h4>
+            <p>Vercel auto-detects the <code>/api</code> folder as serverless functions and <code>vercel.json</code> as the cron schedule. One push wires everything:</p>
+          </div>
+        </div>
+
+        <Terminal
+          label="git — course repo"
+          lines={[
+            { kind: "cmd",  text: "git add app.jsx" },
+            { kind: "cmd",  text: 'git commit -m "wire Supabase credentials"' },
+            { kind: "cmd",  text: "git push origin main" },
+            { kind: "blank" },
+            { kind: "out",  text: "Vercel detects push → builds..." },
+            { kind: "ok",   text: "✓ Serverless functions: /api/synthesize, /api/apply" },
+            { kind: "ok",   text: "✓ Cron job registered: 0 12 * * 4 (Thu 12:00 UTC)" },
+            { kind: "ok",   text: "✓ Deployment live" },
+          ]}
+        />
+
+        <Callout kind="do" title="Verify in Vercel dashboard">
+          After deploy: <strong>Project → Functions tab</strong> should list <code>synthesize</code> and <code>apply</code>. <strong>Project → Cron Jobs tab</strong> should show Thursday 12:00 UTC. If Cron Jobs tab is missing, check that <code>vercel.json</code> is at the repo root.
+        </Callout>
+
+        {/* ── Step 6: Test ── */}
+        <div className="cheat-card" style={{ marginTop: 32 }}>
+          <div className="cc-item" style={{ gridColumn: "1 / -1" }}>
+            <div className="eyebrow">Step 6</div>
+            <h4>Test the full loop end-to-end</h4>
+            <p>Submit a test rating, confirm the Supabase write, then trigger your first synthesis manually:</p>
+          </div>
+        </div>
+
+        <div className="cheat-card" style={{ marginTop: 8 }}>
+          <div className="cc-item">
+            <div className="eyebrow">6a — Submit feedback</div>
+            <p>Rate any lesson. Open <strong>Supabase → Table Editor → feedback</strong>. A new row should appear with <code>synthesized = false</code>. If it doesn't, check that <code>SUPABASE_URL</code> and <code>SUPABASE_ANON_KEY</code> in <code>app.jsx</code> match your project.</p>
+          </div>
+          <div className="cc-item">
+            <div className="eyebrow">6b — Unlock the admin dashboard</div>
+            <p>Click the <strong>"AI-Native Designer 101"</strong> brand logo in the sidebar <strong>five times in quick succession</strong> → enter your admin password → you're in.</p>
+          </div>
+          <div className="cc-item">
+            <div className="eyebrow">6c — Run synthesis</div>
+            <p>Go to the <strong>Automations</strong> tab → click <strong>"Run synthesis now"</strong>. The manual trigger bypasses the 15-item threshold — you don't need real learner volume to test. A proposal should appear in the <strong>HITL Proposals</strong> tab within 10–15 seconds.</p>
+          </div>
+          <div className="cc-item">
+            <div className="eyebrow">6d — Approve &amp; auto-apply</div>
+            <p>Find a <strong>trivial</strong> proposal (moss-coloured badge) → click <strong>Approve</strong> → <strong>Apply automatically</strong>. Check your GitHub repo — a branch named <code>auto-fix/…</code> and a PR should appear within 30 seconds.</p>
+          </div>
+        </div>
+
+        <Callout kind="tip" title="Cron will take over from here">
+          After the initial test, the system runs itself. The Thursday noon cron fires automatically once you have enough real learner feedback. The threshold (default 15) also auto-triggers synthesis mid-week if the course gets traffic.
+        </Callout>
+
       </section>
 
       <Quiz
