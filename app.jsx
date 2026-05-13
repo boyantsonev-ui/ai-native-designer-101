@@ -2,8 +2,8 @@
 
 // ── Supabase client (anon key is safe to expose; RLS enforces access)
 // Replace these with your project values after creating the Supabase project.
-const SUPABASE_URL      = "https://YOUR_PROJECT.supabase.co";
-const SUPABASE_ANON_KEY = "YOUR_ANON_KEY";
+const SUPABASE_URL      = "https://bcbjufeltrrvzclkykzi.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjYmp1ZmVsdHJydnpjbGt5a3ppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NzYxOTksImV4cCI6MjA5NDI1MjE5OX0.30xytS_gDiHiDPaGs-OgPOQdtc76SDtA1HdpHCCqzdA";
 
 if (
   typeof window.supabase !== "undefined" &&
