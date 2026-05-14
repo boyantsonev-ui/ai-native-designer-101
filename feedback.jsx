@@ -100,7 +100,7 @@ function FeedbackPanel({ lessonId, lessonTitle }) {
     setChatHistory(h => [...h, { role: "user", text: q }]);
     setChatBusy(true);
     try {
-      const system = `You are a concise, practical tutor for "AI-Native Designer 101", a 60-minute upskill course about Claude, AI agents, MCP servers, and deploying with GitHub/Vercel — aimed at product designers. The learner is on Lesson ${lessonId}: "${lessonTitle}". Answer in 2–4 sentences max. Use plain language; no jargon without an explanation.`;
+      const system = `You are a concise, practical tutor for "AI-Native Designer 101", a living course about Claude, AI agents, MCP servers, and deploying with GitHub/Vercel — aimed at product designers. The learner is on Lesson ${lessonId}: "${lessonTitle}". Answer in 2–4 sentences max. Use plain language; no jargon without an explanation.`;
       const r = await window.claude.complete({ messages: [{ role: "user", content: system + "\n\n" + q }] });
       setChatHistory(h => [...h, { role: "ai", text: r }]);
       // Record the conversation as feedback for synthesis

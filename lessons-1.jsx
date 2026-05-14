@@ -1,12 +1,12 @@
 // Lessons 1-4 — Foundations + Tools
 
-const Lesson1 = () => (
+const Lesson1 = ({ onNavigate }) => (
   <>
     <HeroCard
-      eyebrow="Course · 60 min"
+      eyebrow="Course"
       title="The future of designers."
-      lede="In one hour, you'll go from clicking buttons in Figma to orchestrating agents that build, deploy, and measure your prototypes — in your own voice."
-      meta={["13 lessons", "≈ 60 minutes", "Mixed / hands-on", "Updated May 2026"]}
+      lede="You'll go from clicking buttons in Figma to orchestrating agents that build, deploy, and measure your prototypes — in your own voice."
+      meta={["14 lessons", "Mixed / hands-on", "Updated May 2026"]}
     />
 
     <p className="lede">
@@ -14,14 +14,14 @@ const Lesson1 = () => (
     </p>
 
     <section>
-      <h3>What you'll be able to do in 60 minutes</h3>
+      <h3>What you'll be able to do</h3>
       <div className="two-col">
-        <div className="cheat-card"><h5>Run Claude as a teammate</h5><p>Use Claude Desktop and Claude Code as collaborators, not search engines.</p></div>
-        <div className="cheat-card"><h5>Author your own Skills</h5><p>Package your taste into reusable instruction modules Claude loads on demand.</p></div>
-        <div className="cheat-card"><h5>Compose agents + sub-agents</h5><p>Apply Anthropic's patterns: workflows for control, agents for autonomy.</p></div>
-        <div className="cheat-card"><h5>Wire MCP servers</h5><p>Plug Figma, GitHub, Vercel, PostHog, Clarity, Hotjar into one chat.</p></div>
-        <div className="cheat-card"><h5>Ship to production</h5><p>From local prototype → GitHub → Vercel preview URL in one prompt.</p></div>
-        <div className="cheat-card"><h5>Measure what people do</h5><p>Pull behavioural data back into Claude and iterate from real signal.</p></div>
+        <div className="cheat-card" data-nav onClick={() => onNavigate && onNavigate(2)}><h5>Run Claude as a teammate</h5><p>Use Claude Desktop and Claude Code as collaborators, not search engines.</p></div>
+        <div className="cheat-card" data-nav onClick={() => onNavigate && onNavigate(4)}><h5>Author your own Skills</h5><p>Package your taste into reusable instruction modules Claude loads on demand.</p></div>
+        <div className="cheat-card" data-nav onClick={() => onNavigate && onNavigate(6)}><h5>Compose agents + sub-agents</h5><p>Apply Anthropic's patterns: workflows for control, agents for autonomy.</p></div>
+        <div className="cheat-card" data-nav onClick={() => onNavigate && onNavigate(8)}><h5>Wire MCP servers</h5><p>Plug Figma, GitHub, Vercel, PostHog, Clarity, Hotjar into one chat.</p></div>
+        <div className="cheat-card" data-nav onClick={() => onNavigate && onNavigate(11)}><h5>Ship to production</h5><p>From local prototype → GitHub → Vercel preview URL in one prompt.</p></div>
+        <div className="cheat-card" data-nav onClick={() => onNavigate && onNavigate(12)}><h5>Measure what people do</h5><p>Pull behavioural data back into Claude and iterate from real signal.</p></div>
       </div>
     </section>
 
