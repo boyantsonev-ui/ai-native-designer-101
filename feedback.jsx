@@ -40,11 +40,14 @@ function pushFeedback(item) {
       content:      next.content,
       rating:       next.rating,
       sentiment:    next.sentiment,
-    }).then(() => {
-      // Threshold trigger — fire synthesis if enough unseen items have accumulated
-      const unseen = all.filter(f => !f.synthesized).length;
+    }).then(async () => {
+      // Threshold trigger — use global Supabase count, not local localStorage count
+      const { count } = await window.__supabase
+        .from("feedback")
+        .select("id", { count: "exact", head: true })
+        .eq("synthesized", false);
       const threshold = 10;
-      if (unseen >= threshold) {
+      if ((count ?? 0) >= threshold) {
         fetch("/api/synthesize", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -706,18 +709,23 @@ function AdminDashboard({ onClose }) {
   const [lessonFilter, setLessonFilter] = useState("all");
   const [applyBusy,  setApplyBusy]  = useState(null); // proposalId being applied
 
-  // Load live data from Supabase on mount when available
+  // Load live data on mount — feedback via service-role API, proposals/syntheses via anon client
   useEffect(() => {
-    if (!window.__supabase) return;
+    const supabaseQueries = window.__supabase
+      ? Promise.all([
+          window.__supabase.from("hitl_proposals").select("*").order("created_at", { ascending: false }),
+          window.__supabase.from("syntheses").select("*").order("created_at", { ascending: false }),
+        ])
+      : Promise.resolve([{ data: null }, { data: null }]);
+
     Promise.all([
-      window.__supabase.from("feedback").select("*").order("created_at", { ascending: false }),
-      window.__supabase.from("hitl_proposals").select("*").order("created_at", { ascending: false }),
-      window.__supabase.from("syntheses").select("*").order("created_at", { ascending: false }),
-    ]).then(([fbRes, propRes, synthRes]) => {
-      if (fbRes.data && fbRes.data.length > 0)   setFeedback(fbRes.data.map(remapRow));
-      if (propRes.data)  setProposals(propRes.data);
-      if (synthRes.data) setSyntheses(synthRes.data);
-    });
+      fetch("/api/feedback").then(r => r.json()),
+      supabaseQueries,
+    ]).then(([fbJson, [propRes, synthRes]]) => {
+      if (fbJson.feedback && fbJson.feedback.length > 0) setFeedback(fbJson.feedback.map(remapRow));
+      if (propRes?.data)  setProposals(propRes.data);
+      if (synthRes?.data) setSyntheses(synthRes.data);
+    }).catch(() => {});
   }, []);
 
   // Routine schedule — kept in sync with RoutineScheduler via callback
