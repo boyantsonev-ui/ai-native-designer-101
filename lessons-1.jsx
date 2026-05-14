@@ -244,6 +244,55 @@ const Lesson3 = () => (
     </Callout>
 
     <section>
+      <h3>Managing your session</h3>
+      <p>Claude Code keeps a running transcript of every session. Four commands let you control how much of that history stays in the context window — and how to get it back.</p>
+      <div className="two-col">
+        <div className="cheat-card">
+          <h5><code>/clear</code></h5>
+          <p>Wipes the conversation history entirely. Near-zero context; maximum headroom. Use this when you finish a task and start something unrelated.</p>
+        </div>
+        <div className="cheat-card">
+          <h5><code>/compact [focus]</code></h5>
+          <p>Summarizes the full history into ~4k tokens, then continues. A 70k-token session compresses to ~4k. Pass an optional focus to steer the summary: <code>/compact Focus on the auth module</code>.</p>
+        </div>
+        <div className="cheat-card">
+          <h5><code>/resume</code></h5>
+          <p>Shows saved past sessions from <code>~/.claude/projects/</code> — with size and age — so you can pick up exactly where you left off. From the CLI: <code>claude -c</code> resumes the most recent.</p>
+        </div>
+        <div className="cheat-card">
+          <h5><code>/context</code></h5>
+          <p>Renders your current context usage as a colored grid broken down by system prompt, messages, and tool outputs. Your "fuel gauge" before a long task.</p>
+        </div>
+      </div>
+
+      <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 16, fontSize: 14 }}>
+        <thead>
+          <tr style={{ borderBottom: "1px solid var(--border)" }}>
+            <th style={{ textAlign: "left", padding: "6px 12px 6px 0", color: "var(--text-2)" }}>Situation</th>
+            <th style={{ textAlign: "left", padding: "6px 0", color: "var(--text-2)" }}>Command</th>
+          </tr>
+        </thead>
+        <tbody>
+          {[
+            ["Finished a task, starting something new", "/clear"],
+            ["Mid-task, context getting large, want to keep going", "/compact"],
+            ["Want to pick up an old session", "/resume"],
+            ["Curious how full your context is", "/context"],
+          ].map(([situation, cmd]) => (
+            <tr key={cmd} style={{ borderBottom: "1px solid var(--border-subtle, var(--border))" }}>
+              <td style={{ padding: "8px 12px 8px 0", color: "var(--text-1)" }}>{situation}</td>
+              <td style={{ padding: "8px 0" }}><code>{cmd}</code></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <Callout kind="warn" title="Don't wait for auto-compact">
+        <p style={{ margin: 0 }}>Claude Code auto-compacts when the context hits ~95% capacity. Letting it get there is risky — the emergency summary can drop critical decisions mid-task and cause the agent to spiral. Check <code>/context</code> periodically and <code>/compact</code> manually while you still have control.</p>
+      </Callout>
+    </section>
+
+    <section>
       <h3>When Desktop vs Code?</h3>
       <div className="two-col">
         <div className="cheat-card"><h5>Reach for Desktop</h5><p>Thinking, critique, copy, brand work, strategy, image review, Slack-shaped tasks.</p></div>
@@ -417,6 +466,59 @@ See \`examples/before-after.md\` for the bar.`}
         <p style={{ margin: 0 }}>
           <strong>Voice & critique</strong> · <strong>Component-naming conventions</strong> · <strong>Empty-state writing</strong> · <strong>Accessibility audit</strong> · <strong>Design-review checklist</strong>. Anything you find yourself re-explaining is a Skill in disguise.
         </p>
+      </Callout>
+    </section>
+
+    <section>
+      <h3>Skills in Claude Code vs Claude.ai</h3>
+      <p>Skills follow the same open standard everywhere, but how you manage and invoke them differs by surface.</p>
+      <div className="two-col">
+        <div className="cheat-card">
+          <h5>Claude Code</h5>
+          <p>Skills are <strong>files on disk</strong>. Store them in <code>.claude/skills/</code> inside your repo (project-scoped) or <code>~/.claude/skills/</code> (personal, all repos). Invoke with <code>/skill-name</code> or let Claude auto-trigger. Edit the SKILL.md directly — changes take effect in the current session without restarting.</p>
+        </div>
+        <div className="cheat-card">
+          <h5>Claude.ai</h5>
+          <p>Skills are <strong>uploaded via UI</strong>. Go to Customize › Skills, toggle example skills on, or upload your own as a ZIP. Claude auto-triggers them — no slash command needed. On Enterprise, owners can provision skills org-wide so they appear for every user automatically.</p>
+        </div>
+      </div>
+
+      <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 16, fontSize: 14 }}>
+        <thead>
+          <tr style={{ borderBottom: "1px solid var(--border)" }}>
+            <th style={{ textAlign: "left", padding: "6px 12px 6px 0", color: "var(--text-2)" }}></th>
+            <th style={{ textAlign: "left", padding: "6px 12px", color: "var(--text-2)" }}>Claude Code</th>
+            <th style={{ textAlign: "left", padding: "6px 0", color: "var(--text-2)" }}>Claude.ai</th>
+          </tr>
+        </thead>
+        <tbody>
+          {[
+            ["Storage", "Files on disk", "ZIP upload via UI"],
+            ["Invocation", "/skill-name or auto-trigger", "Auto-trigger only"],
+            ["Customization", "Edit SKILL.md, live reload", "Upload new ZIP to update"],
+            ["Extras", "Subagent execution, invocation control", "Partner skills (Figma, Notion, Atlassian)"],
+            ["Scope", "Personal, project, or enterprise hierarchy", "Personal, team, or org-wide"],
+          ].map(([label, code, web]) => (
+            <tr key={label} style={{ borderBottom: "1px solid var(--border-subtle, var(--border))" }}>
+              <td style={{ padding: "8px 12px 8px 0", color: "var(--text-2)", fontWeight: 500 }}>{label}</td>
+              <td style={{ padding: "8px 12px", color: "var(--text-1)" }}>{code}</td>
+              <td style={{ padding: "8px 0", color: "var(--text-1)" }}>{web}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h3>How scope works in Claude Code</h3>
+      <p>Where you put a skill file determines who can use it. Skills load from <code>.claude/skills/</code> in your starting directory and every parent up to the repo root, plus your personal <code>~/.claude/skills/</code>.</p>
+      <CodeBlock filename="skill lookup order" lang="bash">
+{`~/.claude/skills/         # personal — available in every repo
+.claude/skills/           # project — this repo only
+parent/.claude/skills/    # inherited — monorepo root`}
+      </CodeBlock>
+      <Callout kind="note" title="Higher scope wins on name collisions">
+        <p style={{ margin: 0 }}>If two skills share the same name, the enterprise-level skill overrides the personal one, and personal overrides project. This lets a team standardize a <code>brand-critique</code> skill while still letting individuals override it locally.</p>
       </Callout>
     </section>
 
