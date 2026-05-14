@@ -708,6 +708,7 @@ function AdminDashboard({ onClose }) {
   const [synthError, setSynthError] = useState("");
   const [lessonFilter, setLessonFilter] = useState("all");
   const [applyBusy,  setApplyBusy]  = useState(null); // proposalId being applied
+  const [dataLoading, setDataLoading] = useState(true);
 
   // Load live data on mount — feedback via service-role API, proposals/syntheses via anon client
   useEffect(() => {
@@ -725,7 +726,7 @@ function AdminDashboard({ onClose }) {
       if (fbJson.feedback && fbJson.feedback.length > 0) setFeedback(fbJson.feedback.map(remapRow));
       if (propRes?.data)  setProposals(propRes.data);
       if (synthRes?.data) setSyntheses(synthRes.data);
-    }).catch(() => {});
+    }).catch(() => {}).finally(() => setDataLoading(false));
   }, []);
 
   // Routine schedule — kept in sync with RoutineScheduler via callback
@@ -955,8 +956,17 @@ Group related feedback into one proposal rather than many tiny ones. Omit noise.
                   { n: pendingCount,       label: "HITL pending" },
                 ].map(({ n, label }) => (
                   <div key={label} className="admin-stat">
-                    <div className="admin-stat-n">{n}</div>
-                    <div className="admin-stat-label mono">{label}</div>
+                    {dataLoading ? (
+                      <>
+                        <div className="admin-stat-skeleton-n" />
+                        <div className="admin-stat-skeleton-label" />
+                      </>
+                    ) : (
+                      <>
+                        <div className="admin-stat-n">{n}</div>
+                        <div className="admin-stat-label mono">{label}</div>
+                      </>
+                    )}
                   </div>
                 ))}
               </div>
