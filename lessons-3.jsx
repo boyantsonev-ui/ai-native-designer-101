@@ -159,10 +159,8 @@ const Lesson11 = () => (
     </Callout>
 
     <TryIt
-      label="Practice — write a tight commit message from a diff summary"
-      placeholder=""
-      defaultPrompt="Write a conventional commit message for this change:\n\n- Added 4 onboarding screens (Welcome, Goals, Workspace, Invite)\n- Added mobile breakpoint at 480px\n- Replaced 'Get started' CTA copy with 'Continue'\n- Fixed avatar drift between Figma and prod\n\nFormat: type(scope): subject (max 72 chars), then 2-3 bullet body."
-      hint="↳ aim for type(scope): verb-led summary"
+      defaultPrompt="Write a brief deploy description for stakeholders reviewing this release:\n\n- Added 4 onboarding screens (Welcome, Goals, Workspace, Invite)\n- Added mobile breakpoint at 480px\n- Replaced 'Get started' CTA copy with 'Continue'\n- Fixed avatar drift between Figma and prod\n\nKeep it to 2–3 sentences. Non-technical audience — focus on what changed for the user, not how."
+      hint="↳ aim for what changed for users, not how it was built"
     />
 
     <Quiz

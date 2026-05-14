@@ -14,30 +14,30 @@ if (
 
 const LESSONS = [
   { group: "Intro", items: [
-    { id: 1,  title: "The future of designers", time: "5 min", Comp: () => <Lesson1 /> },
+    { id: 1,  title: "The future of designers", Comp: ({ onNavigate }) => <Lesson1 onNavigate={onNavigate} /> },
   ]},
   { group: "Tools", items: [
-    { id: 2,  title: "Claude Desktop", time: "6 min", Comp: () => <Lesson2 /> },
-    { id: 3,  title: "Claude Code", time: "7 min", Comp: () => <Lesson3 /> },
-    { id: 4,  title: "Skills", time: "4 min", Comp: () => <Lesson4 /> },
+    { id: 2,  title: "Claude Desktop", Comp: () => <Lesson2 /> },
+    { id: 3,  title: "Claude Code", Comp: () => <Lesson3 /> },
+    { id: 4,  title: "Skills", Comp: () => <Lesson4 /> },
   ]},
   { group: "Foundations", items: [
-    { id: 5,  title: "Agents — what Anthropic means", time: "6 min", Comp: () => <Lesson5 /> },
-    { id: 6,  title: "Sub-agents & orchestrators", time: "5 min", Comp: () => <Lesson6 /> },
-    { id: 7,  title: "Autonomous agents", time: "4 min", Comp: () => <Lesson7 /> },
+    { id: 5,  title: "Agents — what Anthropic means", Comp: () => <Lesson5 /> },
+    { id: 6,  title: "Sub-agents & orchestrators", Comp: () => <Lesson6 /> },
+    { id: 7,  title: "Autonomous agents", Comp: () => <Lesson7 /> },
   ]},
   { group: "Wiring", items: [
-    { id: 8,  title: "MCP — the protocol", time: "5 min", Comp: () => <Lesson8 /> },
-    { id: 9,  title: "Figma MCP & Console MCP", time: "5 min", Comp: () => <Lesson9 /> },
-    { id: 10, title: ".md / .mdx / .yaml / schema", time: "4 min", Comp: () => <Lesson10 /> },
+    { id: 8,  title: "MCP — the protocol", Comp: () => <Lesson8 /> },
+    { id: 9,  title: "Figma MCP & Console MCP", Comp: () => <Lesson9 /> },
+    { id: 10, title: ".md / .mdx / .yaml / schema", Comp: () => <Lesson10 /> },
   ]},
   { group: "Ship & measure", items: [
-    { id: 11, title: "Deploy to GitHub & Vercel", time: "5 min", Comp: () => <Lesson11 /> },
-    { id: 12, title: "Measure with PostHog · Clarity · Hotjar", time: "6 min", Comp: () => <Lesson12 /> },
-    { id: 13, title: "Wrap-up & cheat sheet", time: "2 min", Comp: ({ onOpenCheatSheet }) => <Lesson13 onOpenCheatSheet={onOpenCheatSheet} /> },
+    { id: 11, title: "Deploy to GitHub & Vercel", Comp: () => <Lesson11 /> },
+    { id: 12, title: "Measure with PostHog · Clarity · Hotjar", Comp: () => <Lesson12 /> },
+    { id: 13, title: "Wrap-up & cheat sheet", Comp: ({ onOpenCheatSheet }) => <Lesson13 onOpenCheatSheet={onOpenCheatSheet} /> },
   ]},
   { group: "Meta", items: [
-    { id: 14, title: "The course that teaches itself", time: "4 min", Comp: () => <Lesson14 /> },
+    { id: 14, title: "The course that teaches itself", Comp: () => <Lesson14 /> },
   ]},
 ];
 
@@ -139,7 +139,7 @@ function App() {
               <div className="brand-logo">A</div>
               <div>
                 <div className="brand-title">AI-Native Designer 101</div>
-                <div className="brand-sub">A 60-minute upskill course</div>
+                <div className="brand-sub">A living course that teaches itself</div>
               </div>
             </div>
           </div>
@@ -167,9 +167,8 @@ function App() {
                       className={"lesson-item" + (active ? " active" : "") + (done ? " done" : "")}
                       onClick={() => goTo(l.id)}
                     >
-                      <span className="lesson-num">{String(l.id).padStart(2, "0")}</span>
+                      <span className="lesson-node"></span>
                       <span className="lesson-title">{l.title}</span>
-                      <span className="lesson-time">{l.time}</span>
                     </div>
                   );
                 })}
@@ -203,8 +202,6 @@ function App() {
               <span className="mono">LESSON {String(current.id).padStart(2, "0")}</span>
               <span className="sep">/</span>
               <strong>{current.title}</strong>
-              <span className="sep">·</span>
-              <span>{current.time}</span>
             </div>
             <div className="header-actions">
               <button className="btn btn-ghost" onClick={() => setOpenGloss(true)}>Glossary</button>
@@ -214,7 +211,7 @@ function App() {
 
           {/* Lesson content */}
           <div className="lesson" key={current.id}>
-            <Comp onOpenCheatSheet={() => setOpenCheat(true)} />
+            <Comp onOpenCheatSheet={() => setOpenCheat(true)} onNavigate={goTo} />
           </div>
 
           {/* ── Per-lesson feedback panel ── */}

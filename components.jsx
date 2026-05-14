@@ -86,7 +86,6 @@ function Quiz({ question, options, correct, explain }) {
   const [picked, setPicked] = useState(null);
   return (
     <div className="quiz">
-      <div className="eyebrow" style={{ marginBottom: 10 }}>Knowledge check</div>
       <div className="quiz-q">{question}</div>
       <div className="quiz-opts">
         {options.map((opt, i) => {
@@ -230,8 +229,8 @@ function ChatBubble({ m }) {
   );
 }
 
-// ---------- "Try it" — calls window.claude.complete ----------
-function TryIt({ label = "Try it with Claude", placeholder, defaultPrompt, system, hint }) {
+// ---------- "Experiment" — calls window.claude.complete ----------
+function TryIt({ label = "Experiment", placeholder, defaultPrompt, system, hint }) {
   const [val, setVal] = useState(defaultPrompt || "");
   const [out, setOut] = useState("");
   const [busy, setBusy] = useState(false);
@@ -254,6 +253,7 @@ function TryIt({ label = "Try it with Claude", placeholder, defaultPrompt, syste
         <div className="eyebrow">{label}</div>
         {hint && <div className="mono" style={{ color: "var(--ink-3)" }}>{hint}</div>}
       </div>
+      <p className="tryit-sub">Design is applied research — take your time with this one.</p>
       <textarea value={val} onChange={(e) => setVal(e.target.value)} placeholder={placeholder} />
       <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
         <button className="btn btn-clay" onClick={run} disabled={busy}>
@@ -267,6 +267,26 @@ function TryIt({ label = "Try it with Claude", placeholder, defaultPrompt, syste
           {out}
         </div>
       )}
+    </div>
+  );
+}
+
+// ---------- Collapsible Steps ----------
+function Steps({ items }) {
+  const [open, setOpen] = useState(() => items.map(() => true));
+  const toggle = (i) => setOpen(o => o.map((v, j) => j === i ? !v : v));
+  return (
+    <div className="steps">
+      {items.map((step, i) => (
+        <div key={i} className={"step" + (open[i] ? " open" : "")}>
+          <button className="step-head" onClick={() => toggle(i)}>
+            <span className="step-num">{i + 1}</span>
+            <span className="step-label">{step.label}</span>
+            <span className="step-chevron">{open[i] ? "▲" : "▼"}</span>
+          </button>
+          {open[i] && <div className="step-body">{step.body}</div>}
+        </div>
+      ))}
     </div>
   );
 }
@@ -619,6 +639,6 @@ function HeroCard({ eyebrow, title, lede, meta }) {
 }
 
 Object.assign(window, {
-  CodeBlock, CodeTabs, Callout, Quiz, Terminal, ChatMock, TryIt,
+  CodeBlock, CodeTabs, Callout, Quiz, Terminal, ChatMock, TryIt, Steps,
   AgentDiagram, HeroCard, useInView, CourseOrchestrator,
 });
