@@ -2,7 +2,7 @@
 
 const Lesson12 = () => (
   <>
-    <div className="eyebrow">Lesson 12 · Measure</div>
+    <div className="eyebrow">Measure</div>
     <h1 style={{ marginTop: 14, marginBottom: 18 }}>Measuring prototypes — analytics through MCP</h1>
     <p className="lede">
       Designs without signal are opinions. With analytics MCP servers, Claude can pull behavioural data from PostHog, Microsoft Clarity, and Hotjar — and synthesize it into design changes you can ship the same afternoon.
@@ -104,7 +104,7 @@ const Lesson12 = () => (
 const Lesson13 = () => (
   <>
     <HeroCard
-      eyebrow="Lesson 13 · You're done"
+      eyebrow="You're done"
       title="From designer to director."
       lede="You now know enough to compose Claude, MCP servers, agents, and analytics into a real product loop. The rest is reps."
       meta={["Glossary in sidebar", "Save this page"]}

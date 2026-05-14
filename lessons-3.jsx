@@ -2,7 +2,7 @@
 
 const Lesson10 = () => (
   <>
-    <div className="eyebrow">Lesson 10 · Build</div>
+    <div className="eyebrow">Build</div>
     <h1 style={{ marginTop: 14, marginBottom: 18 }}>Files an AI-native designer should know</h1>
     <p className="lede">
       You don't have to be a developer. But you'll touch a small set of file types that quietly run modern product work. Knowing them turns chats into commits.
@@ -132,7 +132,7 @@ agents:
 
 const Lesson11 = () => (
   <>
-    <div className="eyebrow">Lesson 11 · Ship</div>
+    <div className="eyebrow">Ship</div>
     <h1 style={{ marginTop: 14, marginBottom: 18 }}>Deploying — GitHub & Vercel without leaving Claude</h1>
     <p className="lede">
       Once your prototype lives in a repo, shipping it is a chat away. GitHub holds the source, Vercel turns every commit into a live preview URL — and both speak MCP.

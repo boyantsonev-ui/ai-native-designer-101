@@ -5,7 +5,7 @@ function Lesson14() {
     <div>
 
       <HeroCard
-        eyebrow="Meta · Lesson 14"
+        eyebrow="Meta"
         title="The course that teaches itself"
         lede="Every rating you submitted, every question you asked — this system processed it. Here's the architecture running underneath."
         meta={["4 min read", "Orchestrator pattern", "Live example"]}
@@ -32,7 +32,7 @@ function Lesson14() {
         <div className="cheat-card" style={{ marginTop: 16 }}>
 
           <div className="cc-item">
-            <div className="eyebrow">Augmented LLM · Lesson 5</div>
+            <div className="eyebrow">Augmented LLM · Agents — what Anthropic means</div>
             <h4>Supabase + /api/synthesize</h4>
             <p>
               The synthesis function is an LLM (Claude API) augmented with external memory — Supabase stores the feedback it reads and the proposals it writes. That's the Augmented LLM pattern: model + retrieval + memory + tools.
@@ -40,7 +40,7 @@ function Lesson14() {
           </div>
 
           <div className="cc-item">
-            <div className="eyebrow">Evaluator-Optimizer · Lesson 6</div>
+            <div className="eyebrow">Evaluator-Optimizer · Sub-agents &amp; orchestrators</div>
             <h4>Feedback → proposals → revisions</h4>
             <p>
               Each synthesis run evaluates the course against learner feedback and generates graded improvement proposals. Approved proposals close the loop — the course is the generator, synthesis is the evaluator, the HITL review is the optimizer step.
@@ -48,7 +48,7 @@ function Lesson14() {
           </div>
 
           <div className="cc-item">
-            <div className="eyebrow">Human-in-the-Loop · Lesson 7</div>
+            <div className="eyebrow">Human-in-the-Loop · Autonomous agents</div>
             <h4>The HITL proposals tab</h4>
             <p>
               Trivial proposals can be auto-applied via PR; minor and major ones require human review. This is the HITL checkpoint pattern: the agent proposes, a human decides, the system acts. Nothing major ships without approval.
@@ -56,7 +56,7 @@ function Lesson14() {
           </div>
 
           <div className="cc-item">
-            <div className="eyebrow">Orchestrator + sub-agent · Lesson 6</div>
+            <div className="eyebrow">Orchestrator + sub-agent · Sub-agents &amp; orchestrators</div>
             <h4>/api/apply → GitHub → Vercel</h4>
             <p>
               The admin dashboard is the orchestrator: it receives an approved proposal and delegates to the <code>/api/apply</code> sub-agent, which fetches the file, makes a targeted edit via Claude, opens a branch, and creates a PR. The orchestrator never touches the file directly.
@@ -310,7 +310,7 @@ const SUPABASE_ANON_KEY = "eyJhbGci...your-anon-key-here";`}
             "Parallelization — it runs multiple LLM calls simultaneously",
           ],
           correct: 2,
-          explain: "The synthesis function is an LLM augmented with retrieval (reads feedback from Supabase) and memory (writes proposals back). That's the Augmented LLM building block — same pattern as Lesson 5's diagram.",
+          explain: "The synthesis function is an LLM augmented with retrieval (reads feedback from Supabase) and memory (writes proposals back). That's the Augmented LLM building block — same pattern as the Agents diagram.",
         },
         {
           label: "Advanced",
