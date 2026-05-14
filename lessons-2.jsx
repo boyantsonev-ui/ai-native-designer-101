@@ -2,7 +2,7 @@
 
 const Lesson5 = () => (
   <>
-    <div className="eyebrow">Lesson 05 · Foundations</div>
+    <div className="eyebrow">Foundations</div>
     <h1 style={{ marginTop: 14, marginBottom: 18 }}>Agents — what Anthropic actually means</h1>
     <p className="lede">
       "Agent" is the most overloaded word in tech. Anthropic's research <em>Building effective agents</em> draws a clean line: <strong>workflows</strong> are LLMs orchestrated by code. <strong>Agents</strong> are LLMs that orchestrate themselves. Both are useful — knowing which you need is the skill.
@@ -74,7 +74,7 @@ const Lesson5 = () => (
 
 const Lesson6 = () => (
   <>
-    <div className="eyebrow">Lesson 06 · Foundations</div>
+    <div className="eyebrow">Foundations</div>
     <h1 style={{ marginTop: 14, marginBottom: 18 }}>Sub-agents & the orchestrator pattern</h1>
     <p className="lede">
       Once a single Claude is doing too many jobs at once, split it. The orchestrator pattern keeps a "lead" model planning and delegating, while focused sub-agents do narrow, well-scoped work.
@@ -165,7 +165,7 @@ and summarize relevant information for the lead agent.
 
 const Lesson7 = () => (
   <>
-    <div className="eyebrow">Lesson 07 · Foundations</div>
+    <div className="eyebrow">Foundations</div>
     <h1 style={{ marginTop: 14, marginBottom: 18 }}>The autonomous agent — and when to use one</h1>
     <p className="lede">
       An agent, in the strict sense, is an LLM that decides its own next step in a loop until the goal is met. They're powerful and expensive — like a contractor with a key to your office.
@@ -247,7 +247,7 @@ const Lesson7 = () => (
 
 const Lesson8 = () => (
   <>
-    <div className="eyebrow">Lesson 08 · Wiring</div>
+    <div className="eyebrow">Wiring</div>
     <h1 style={{ marginTop: 14, marginBottom: 18 }}>MCP — the USB-C of AI tools</h1>
     <p className="lede">
       The Model Context Protocol is an open standard for connecting an LLM to anything: a database, a SaaS API, a local file. Once a service speaks MCP, every MCP-aware host (Claude Desktop, Claude Code, Cursor, Zed…) can use it.
@@ -340,7 +340,7 @@ const Lesson8 = () => (
 
 const Lesson9 = () => (
   <>
-    <div className="eyebrow">Lesson 09 · Wiring</div>
+    <div className="eyebrow">Wiring</div>
     <h1 style={{ marginTop: 14, marginBottom: 18 }}>Figma MCP — designs as conversation</h1>
     <p className="lede">
       With the Figma MCP, your design file becomes a queryable resource. Claude can read frames, components, variables, comments — and turn them into code, copy, audits, or tickets. The Figma Console MCP adds the missing other half: live inspection of running pages so Claude can compare design vs. reality.
