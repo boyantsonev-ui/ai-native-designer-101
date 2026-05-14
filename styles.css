@@ -1148,3 +1148,115 @@ a { color: var(--clay-deep); text-decoration: underline; text-decoration-thickne
   line-height: 1.5;
 }
 .rs-saved code { font-size: 11px; }
+
+/* ─── Quiz tier pill selector ──────────────────────────────────────────────── */
+.quiz-tiers {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.quiz-tier-btn {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1.5px solid var(--ink-3);
+  background: transparent;
+  color: var(--ink-3);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.quiz-tier-btn:hover { border-color: var(--ink-2); color: var(--ink-2); }
+.quiz-tier-btn.active {
+  border-color: var(--clay);
+  color: var(--clay);
+  background: rgba(204, 120, 92, 0.08);
+}
+
+/* ─── Floating Ask button (FAB) ─────────────────────────────────────────────── */
+.fab {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 20;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--clay);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  transition: background 0.15s, transform 0.15s;
+}
+.fab:hover { background: var(--clay-deep); transform: scale(1.06); }
+.fab svg { display: block; }
+
+/* ─── Ask drawer ────────────────────────────────────────────────────────────── */
+.ask-drawer {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  width: 380px;
+  max-height: 70vh;
+  background: var(--paper);
+  border-top-left-radius: 16px;
+  border-left: 1px solid var(--paper-3);
+  border-top: 1px solid var(--paper-3);
+  box-shadow: -4px -4px 24px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  z-index: 19;
+  transform: translateY(100%);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.ask-drawer.open { transform: translateY(0); }
+
+.ask-drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--paper-3);
+  flex-shrink: 0;
+}
+.ask-drawer-head strong { font-family: var(--sans); font-size: 14px; }
+.ask-drawer-head .mono { font-size: 10px; color: var(--ink-3); margin-top: 2px; }
+
+.ask-drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ask-drawer-input {
+  display: flex;
+  gap: 8px;
+  padding: 12px 18px;
+  border-top: 1px solid var(--paper-3);
+  flex-shrink: 0;
+}
+.ask-drawer-input input {
+  flex: 1;
+  background: var(--paper-2);
+  border: 1.5px solid var(--paper-3);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-family: var(--sans);
+  color: var(--ink);
+}
+.ask-drawer-input input:focus { outline: none; border-color: var(--clay); }
+
+@media (max-width: 600px) {
+  .ask-drawer { width: 100%; border-radius: 0; border-top-left-radius: 16px; border-right: none; }
+  .fab { bottom: 20px; right: 20px; }
+}

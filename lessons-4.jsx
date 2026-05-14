@@ -60,27 +60,54 @@ const Lesson12 = () => (
       hint="↳ specific questions get specific answers"
     />
 
-    <Quiz
-      question="Why combine PostHog, Clarity, and Hotjar instead of using just one?"
-      options={[
-        "Redundancy in case one is down",
-        "They overlap perfectly — pick the cheapest",
-        "Each answers a different question: what happened, where it hurt, why they did it",
-        "They're all required for GDPR",
-      ]}
-      correct={2}
-      explain="The three lenses compose. Quant tells you something is wrong; heatmaps localize it; recordings explain it."
-    />
+    <QuizTiered tiers={[
+      {
+        label: "Beginner",
+        question: "What type of data does Microsoft Clarity provide that PostHog doesn't focus on?",
+        options: [
+          "Funnel conversion rates",
+          "A/B test results",
+          "Heatmaps, rage clicks, and session recordings",
+          "Custom event tracking",
+        ],
+        correct: 2,
+        explain: "Clarity specializes in visual behavioral data — where people click, scroll, rage click, and dead-zone. PostHog focuses on structured event analytics and funnels. They complement each other.",
+      },
+      {
+        label: "Intermediate",
+        question: "Why combine PostHog, Clarity, and Hotjar instead of using just one?",
+        options: [
+          "Redundancy in case one is down",
+          "They overlap perfectly — pick the cheapest",
+          "Each answers a different question: what happened, where it hurt, why they did it",
+          "They're all required for GDPR",
+        ],
+        correct: 2,
+        explain: "The three lenses compose. Quant tells you something is wrong; heatmaps localize it; recordings explain it.",
+      },
+      {
+        label: "Advanced",
+        question: "PostHog shows a drop from Step 2 to Step 3. Clarity shows rage clicks in the same area. How do you use both to form a design hypothesis?",
+        options: [
+          "Pick the signal you trust more and discard the other",
+          "Report both numbers in a doc and wait for more data",
+          "Cross-reference the rage click location with the exact UI element at Step 2 to identify the friction point",
+          "Run an A/B test immediately with any change",
+        ],
+        correct: 2,
+        explain: "Quantitative data tells you where the problem is; behavioral data tells you what the friction looks like. The intersection gives you a specific, actionable design hypothesis — not just a number to explain.",
+      },
+    ]} />
   </>
 );
 
-const Lesson13 = ({ onOpenCheatSheet }) => (
+const Lesson13 = () => (
   <>
     <HeroCard
       eyebrow="Lesson 13 · You're done"
       title="From designer to director."
       lede="You now know enough to compose Claude, MCP servers, agents, and analytics into a real product loop. The rest is reps."
-      meta={["Cheat sheet ready", "Glossary in sidebar", "Save this page"]}
+      meta={["Glossary in sidebar", "Save this page"]}
     />
 
     <section>
@@ -112,22 +139,48 @@ const Lesson13 = ({ onOpenCheatSheet }) => (
       </ol>
     </section>
 
-    <Callout kind="do" title="Take the cheat sheet with you">
-      <p style={{ marginBottom: 12 }}>A printable one-page reference of every concept, command, and config in this course.</p>
-      <button className="btn btn-clay" onClick={onOpenCheatSheet}>Open cheat sheet →</button>
+    <Callout kind="do" title="Keep the Glossary handy">
+      <p>The Glossary in the sidebar covers every concept, pattern, and acronym introduced in this course. Open it whenever you need a quick refresher.</p>
     </Callout>
 
-    <Quiz
-      question="The single most important habit of an AI-native designer is…"
-      options={[
-        "Using the newest model",
-        "Writing a sharper brief",
-        "Owning the most MCP servers",
-        "Coding faster than engineers",
-      ]}
-      correct={1}
-      explain="Tools change every quarter. The brief — the precision of intent — is the durable skill."
-    />
+    <QuizTiered tiers={[
+      {
+        label: "Beginner",
+        question: "Which habit is most useful to build as an AI-native designer?",
+        options: [
+          "Learning to write Python scripts",
+          "Reviewing AI outputs before shipping and encoding corrections as Skills",
+          "Using AI for every task, even simple ones",
+          "Switching to a fully code-first workflow",
+        ],
+        correct: 1,
+        explain: "The review-and-encode loop is what separates AI-assisted from AI-dependent. You catch errors, identify what works, and encode good patterns as Skills — making each session better than the last.",
+      },
+      {
+        label: "Intermediate",
+        question: "The single most important habit of an AI-native designer is…",
+        options: [
+          "Using the newest model",
+          "Writing a sharper brief",
+          "Owning the most MCP servers",
+          "Coding faster than engineers",
+        ],
+        correct: 1,
+        explain: "Tools change every quarter. The brief — the precision of intent — is the durable skill.",
+      },
+      {
+        label: "Advanced",
+        question: "A design team uses Claude for all spec work. After three months, output quality plateaus. What's the most likely systemic cause?",
+        options: [
+          "The model needs fine-tuning on the team's designs",
+          "The team's prompts are too long — they need shortening",
+          "No one has encoded learnings back into shared Skills and CLAUDE.md",
+          "The team needs a more powerful model",
+        ],
+        correct: 2,
+        explain: "Plateau happens when teams extract value but don't reinvest it. Skills and CLAUDE.md are the team's institutional memory for AI. Without systematic encoding of what works, each session starts from the same baseline.",
+      },
+    ]} />
 
     <div style={{ textAlign: "center", marginTop: 60, paddingTop: 40, borderTop: "1px solid var(--rule)" }}>
       <div className="eyebrow" style={{ justifyContent: "center", display: "inline-flex" }}>End of course</div>

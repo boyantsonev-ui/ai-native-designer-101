@@ -89,17 +89,44 @@ agents:
       <p style={{ margin: 0 }}>If a designer learns one new format this year, make it YAML. It unlocks CI, deploys, agent configuration, and most MCP servers — without writing code.</p>
     </Callout>
 
-    <Quiz
-      question="Why use a JSON schema for content like onboarding steps?"
-      options={[
-        "It makes the file smaller",
-        "It tells Claude (and humans, and CI) the exact shape and limits — preventing invalid content from shipping",
-        "It encrypts the data",
-        "It's required by Vercel",
-      ]}
-      correct={1}
-      explain="A schema is a contract. Once written, both the agent and your build pipeline can enforce it."
-    />
+    <QuizTiered tiers={[
+      {
+        label: "Beginner",
+        question: "Why do AI tools work well with Markdown files like CLAUDE.md?",
+        options: [
+          "Markdown files are smaller than Word documents",
+          "AI models can read plain text naturally without parsing special formats",
+          "Markdown files are encrypted, so they're more secure",
+          "AI tools only support Markdown, not other formats",
+        ],
+        correct: 1,
+        explain: "Plain text is what language models work with natively. Markdown adds just enough structure for both humans and AI to read comfortably — no proprietary parser or binary format required.",
+      },
+      {
+        label: "Intermediate",
+        question: "Why use a JSON schema for content like onboarding steps?",
+        options: [
+          "It makes the file smaller",
+          "It tells Claude (and humans, and CI) the exact shape and limits — preventing invalid content from shipping",
+          "It encrypts the data",
+          "It's required by Vercel",
+        ],
+        correct: 1,
+        explain: "A schema is a contract. Once written, both the agent and your build pipeline can enforce it.",
+      },
+      {
+        label: "Advanced",
+        question: "You're building a pipeline where Claude generates structured lesson updates. What's the strongest reason to define a JSON Schema rather than a prose description?",
+        options: [
+          "JSON Schema is easier for humans to read than prose",
+          "It enables programmatic validation and prevents invalid structures from reaching your app",
+          "Prose descriptions use significantly more tokens",
+          "JSON Schema can be imported directly into Figma",
+        ],
+        correct: 1,
+        explain: "A schema creates machine-checkable output — your application validates instantly without re-prompting. Prose instructions are interpreted on each run; schemas enforce a contract the model must satisfy.",
+      },
+    ]} />
   </>
 );
 
@@ -163,17 +190,44 @@ const Lesson11 = () => (
       hint="↳ aim for what changed for users, not how it was built"
     />
 
-    <Quiz
-      question="Why is the per-branch preview URL so important for designers?"
-      options={[
-        "It saves bandwidth",
-        "It lets stakeholders review the real, interactive thing — not a screenshot — before merge",
-        "It deploys to App Store",
-        "It generates QR codes automatically",
-      ]}
-      correct={1}
-      explain="A live URL collapses the gap between 'designed' and 'experienced'. Comments map to elements. Iteration speeds up by an order of magnitude."
-    />
+    <QuizTiered tiers={[
+      {
+        label: "Beginner",
+        question: "What happens automatically when you push code to the main branch in a Vercel-linked GitHub repo?",
+        options: [
+          "The code is reviewed by Vercel engineers",
+          "A new version is built and deployed live",
+          "An email is sent to your team",
+          "The code is archived to a separate server",
+        ],
+        correct: 1,
+        explain: "Vercel's GitHub integration watches your main branch. Every push triggers a build and deploy automatically — no manual step. That's why the GitHub → Vercel workflow is called 'push to deploy'.",
+      },
+      {
+        label: "Intermediate",
+        question: "Why is the per-branch preview URL so important for designers?",
+        options: [
+          "It saves bandwidth",
+          "It lets stakeholders review the real, interactive thing — not a screenshot — before merge",
+          "It deploys to App Store",
+          "It generates QR codes automatically",
+        ],
+        correct: 1,
+        explain: "A live URL collapses the gap between 'designed' and 'experienced'. Comments map to elements. Iteration speeds up by an order of magnitude.",
+      },
+      {
+        label: "Advanced",
+        question: "A Vercel preview deploy fails with a 500 error on one route, but local dev works fine. What's the most likely culprit?",
+        options: [
+          "A typo in the route path — check the URL",
+          "A missing environment variable in Vercel — check runtime logs in the dashboard",
+          "A browser caching issue — clear the cache",
+          "A Vercel infrastructure bug — contact support",
+        ],
+        correct: 1,
+        explain: "Environment variables are the most common local-works/deploy-fails discrepancy. Local dev has your .env file; Vercel only has what you explicitly added in Settings → Environment Variables. Runtime logs show the exact error.",
+      },
+    ]} />
   </>
 );
 

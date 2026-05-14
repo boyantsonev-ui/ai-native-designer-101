@@ -129,20 +129,16 @@ hitl_proposals (id, synthesis_id, lesson_id, severity,
           The architecture is live when you complete these six steps. Until then the system falls back gracefully to localStorage and local synthesis via <code>window.claude.complete</code>.
         </p>
 
-        {/* ── Step 1: Supabase ── */}
-        <div className="cheat-card" style={{ marginTop: 24 }}>
-          <div className="cc-item" style={{ gridColumn: "1 / -1" }}>
-            <div className="eyebrow">Step 1</div>
-            <h4>Create a Supabase project &amp; run the schema</h4>
-            <p>Go to <strong>supabase.com → New project</strong>. Once it's provisioned, open the <strong>SQL Editor</strong> and run these three tables in order:</p>
-          </div>
-        </div>
-
-        <CodeTabs files={[
+        <Steps items={[
           {
-            name: "feedback",
-            lang: "sql",
-            code: `CREATE TABLE feedback (
+            label: "Create a Supabase project & run the schema",
+            body: (<>
+              <p>Go to <strong>supabase.com → New project</strong>. Once it's provisioned, open the <strong>SQL Editor</strong> and run these three tables in order:</p>
+              <CodeTabs files={[
+                {
+                  name: "feedback",
+                  lang: "sql",
+                  code: `CREATE TABLE feedback (
   id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   lesson_id    INT,
   lesson_title TEXT,
@@ -159,11 +155,11 @@ hitl_proposals (id, synthesis_id, lesson_id, severity,
 ALTER TABLE feedback ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "anon insert" ON feedback
   FOR INSERT TO anon WITH CHECK (true);`,
-          },
-          {
-            name: "syntheses",
-            lang: "sql",
-            code: `CREATE TABLE syntheses (
+                },
+                {
+                  name: "syntheses",
+                  lang: "sql",
+                  code: `CREATE TABLE syntheses (
   id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   feedback_count INT,
   trigger        TEXT,   -- 'threshold' | 'manual' | 'cron'
@@ -174,11 +170,11 @@ CREATE POLICY "anon insert" ON feedback
 
 -- Only service_role (server-side) can read or write
 ALTER TABLE syntheses ENABLE ROW LEVEL SECURITY;`,
-          },
-          {
-            name: "hitl_proposals",
-            lang: "sql",
-            code: `CREATE TABLE hitl_proposals (
+                },
+                {
+                  name: "hitl_proposals",
+                  lang: "sql",
+                  code: `CREATE TABLE hitl_proposals (
   id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   synthesis_id  UUID REFERENCES syntheses(id),
   lesson_id     INT,
@@ -190,7 +186,7 @@ ALTER TABLE syntheses ENABLE ROW LEVEL SECURITY;`,
   proposal      TEXT,
   reasoning     TEXT,
   feedback_count INT,
-  status        TEXT DEFAULT 'pending',  -- 'pending' | 'approved' | 'dismissed' | 'applied'
+  status        TEXT DEFAULT 'pending',
   admin_note    TEXT,
   pr_url        TEXT,
   reviewed_at   TIMESTAMP,
@@ -198,42 +194,32 @@ ALTER TABLE syntheses ENABLE ROW LEVEL SECURITY;`,
 );
 
 ALTER TABLE hitl_proposals ENABLE ROW LEVEL SECURITY;`,
+                },
+              ]} />
+              <Callout kind="tip" title="Where to find your keys">
+                <p>In Supabase: <strong>Settings → API</strong>. Copy three things: <strong>Project URL</strong>, <strong>anon / public key</strong> (goes into <code>app.jsx</code>), and <strong>service_role key</strong> (goes into Vercel — never commit it). The anon key is safe in client code because RLS prevents browsers from reading proposals.</p>
+              </Callout>
+            </>),
           },
-        ]} />
-
-        <Callout kind="tip" title="Where to find your keys">
-          <p>In Supabase: <strong>Settings → API</strong>. Copy three things: <strong>Project URL</strong>, <strong>anon / public key</strong> (goes into <code>app.jsx</code>), and <strong>service_role key</strong> (goes into Vercel — never commit it). The anon key is safe in client code because RLS prevents browsers from reading proposals.</p>
-        </Callout>
-
-        {/* ── Step 2: GitHub token ── */}
-        <div className="cheat-card" style={{ marginTop: 32 }}>
-          <div className="cc-item" style={{ gridColumn: "1 / -1" }}>
-            <div className="eyebrow">Step 2</div>
-            <h4>Create a GitHub fine-grained token</h4>
-            <p>Go to <strong>GitHub → Settings → Developer settings → Fine-grained personal access tokens → Generate new token</strong>. Scope it to your course repo only, with these repository permissions:</p>
-          </div>
-        </div>
-
-        <CodeBlock lang="text" filename="Required token permissions">
+          {
+            label: "Create a GitHub fine-grained token",
+            body: (<>
+              <p>Go to <strong>GitHub → Settings → Developer settings → Fine-grained personal access tokens → Generate new token</strong>. Scope it to your course repo only, with these repository permissions:</p>
+              <CodeBlock lang="text" filename="Required token permissions">
 {`Contents       → Read and write   (fetch files, commit edits)
 Pull requests  → Read and write   (open auto-fix PRs)
 Metadata       → Read-only        (required by GitHub for all tokens)`}
-        </CodeBlock>
-
-        <Callout kind="warn" title="Scope it to one repo">
-          The token only needs access to your course repo. Granting access to all repositories gives the auto-apply sub-agent unnecessary reach — scope it narrowly.
-        </Callout>
-
-        {/* ── Step 3: Vercel env vars ── */}
-        <div className="cheat-card" style={{ marginTop: 32 }}>
-          <div className="cc-item" style={{ gridColumn: "1 / -1" }}>
-            <div className="eyebrow">Step 3</div>
-            <h4>Add environment variables in Vercel</h4>
-            <p>Go to <strong>Vercel project → Settings → Environment Variables</strong>. Add all seven — they apply to all environments (Production, Preview, Development):</p>
-          </div>
-        </div>
-
-        <CodeBlock lang="bash" filename="Vercel environment variables">
+              </CodeBlock>
+              <Callout kind="warn" title="Scope it to one repo">
+                The token only needs access to your course repo. Granting access to all repositories gives the auto-apply sub-agent unnecessary reach — scope it narrowly.
+              </Callout>
+            </>),
+          },
+          {
+            label: "Add environment variables in Vercel",
+            body: (<>
+              <p>Go to <strong>Vercel project → Settings → Environment Variables</strong>. Add all seven — they apply to all environments (Production, Preview, Development):</p>
+              <CodeBlock lang="bash" filename="Vercel environment variables">
 {`ANTHROPIC_API_KEY          # sk-ant-... from console.anthropic.com
 SUPABASE_URL               # https://xxxx.supabase.co
 SUPABASE_SERVICE_ROLE_KEY  # from Supabase Settings → API → service_role
@@ -241,102 +227,104 @@ GITHUB_TOKEN               # fine-grained PAT from Step 2
 GITHUB_OWNER               # your GitHub username or org name
 GITHUB_REPO                # repo name only — not the full URL
 SYNTHESIS_THRESHOLD        # optional — omit to use the default of 15`}
-        </CodeBlock>
-
-        <Callout kind="note" title="SUPABASE_ANON_KEY is different">
-          The anon key lives in <code>app.jsx</code> as a client-side constant — it is not a Vercel env var. The service_role key above is the elevated server-side key used by <code>/api/synthesize</code> and <code>/api/apply</code>. Do not mix them up.
-        </Callout>
-
-        {/* ── Step 4: Wire app.jsx ── */}
-        <div className="cheat-card" style={{ marginTop: 32 }}>
-          <div className="cc-item" style={{ gridColumn: "1 / -1" }}>
-            <div className="eyebrow">Step 4</div>
-            <h4>Update <code>app.jsx</code> with your Supabase client credentials</h4>
-            <p>At the top of <code>app.jsx</code>, replace the two placeholder constants with the values from your Supabase project:</p>
-          </div>
-        </div>
-
-        <CodeBlock lang="js" filename="app.jsx — lines 3–4">
+              </CodeBlock>
+              <Callout kind="note" title="SUPABASE_ANON_KEY is different">
+                The anon key lives in <code>app.jsx</code> as a client-side constant — it is not a Vercel env var. The service_role key above is the elevated server-side key used by <code>/api/synthesize</code> and <code>/api/apply</code>. Do not mix them up.
+              </Callout>
+            </>),
+          },
+          {
+            label: "Update app.jsx with your Supabase client credentials",
+            body: (<>
+              <p>At the top of <code>app.jsx</code>, replace the two placeholder constants with the values from your Supabase project:</p>
+              <CodeBlock lang="js" filename="app.jsx — lines 3–4">
 {`const SUPABASE_URL      = "https://your-project-id.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGci...your-anon-key-here";`}
-        </CodeBlock>
-
-        <Callout kind="tip" title="Safe to commit">
-          The anon key is designed to be public. Supabase RLS ensures browsers can only INSERT rows into <code>feedback</code> — they cannot read proposals or syntheses. Commit it freely.
-        </Callout>
-
-        {/* ── Step 5: Deploy ── */}
-        <div className="cheat-card" style={{ marginTop: 32 }}>
-          <div className="cc-item" style={{ gridColumn: "1 / -1" }}>
-            <div className="eyebrow">Step 5</div>
-            <h4>Push to GitHub — Vercel does the rest</h4>
-            <p>Vercel auto-detects the <code>/api</code> folder as serverless functions and <code>vercel.json</code> as the cron schedule. One push wires everything:</p>
-          </div>
-        </div>
-
-        <Terminal
-          label="git — course repo"
-          lines={[
-            { kind: "cmd",  text: "git add app.jsx" },
-            { kind: "cmd",  text: 'git commit -m "wire Supabase credentials"' },
-            { kind: "cmd",  text: "git push origin main" },
-            { kind: "blank" },
-            { kind: "out",  text: "Vercel detects push → builds..." },
-            { kind: "ok",   text: "✓ Serverless functions: /api/synthesize, /api/apply" },
-            { kind: "ok",   text: "✓ Cron job registered: 0 12 * * 4 (Thu 12:00 UTC)" },
-            { kind: "ok",   text: "✓ Deployment live" },
-          ]}
-        />
-
-        <Callout kind="do" title="Verify in Vercel dashboard">
-          After deploy: <strong>Project → Functions tab</strong> should list <code>synthesize</code> and <code>apply</code>. <strong>Project → Cron Jobs tab</strong> should show Thursday 12:00 UTC. If Cron Jobs tab is missing, check that <code>vercel.json</code> is at the repo root.
-        </Callout>
-
-        {/* ── Step 6: Test ── */}
-        <div className="cheat-card" style={{ marginTop: 32 }}>
-          <div className="cc-item" style={{ gridColumn: "1 / -1" }}>
-            <div className="eyebrow">Step 6</div>
-            <h4>Test the full loop end-to-end</h4>
-            <p>Submit a test rating, confirm the Supabase write, then trigger your first synthesis manually:</p>
-          </div>
-        </div>
-
-        <div className="cheat-card" style={{ marginTop: 8 }}>
-          <div className="cc-item">
-            <div className="eyebrow">6a — Submit feedback</div>
-            <p>Rate any lesson. Open <strong>Supabase → Table Editor → feedback</strong>. A new row should appear with <code>synthesized = false</code>. If it doesn't, check that <code>SUPABASE_URL</code> and <code>SUPABASE_ANON_KEY</code> in <code>app.jsx</code> match your project.</p>
-          </div>
-          <div className="cc-item">
-            <div className="eyebrow">6b — Unlock the admin dashboard</div>
-            <p>Click the <strong>"AI-Native Designer 101"</strong> brand logo in the sidebar <strong>five times in quick succession</strong> → enter your admin password → you're in.</p>
-          </div>
-          <div className="cc-item">
-            <div className="eyebrow">6c — Run synthesis</div>
-            <p>Go to the <strong>Automations</strong> tab → click <strong>"Run synthesis now"</strong>. The manual trigger bypasses the 15-item threshold — you don't need real learner volume to test. A proposal should appear in the <strong>HITL Proposals</strong> tab within 10–15 seconds.</p>
-          </div>
-          <div className="cc-item">
-            <div className="eyebrow">6d — Approve &amp; auto-apply</div>
-            <p>Find a <strong>trivial</strong> proposal (moss-coloured badge) → click <strong>Approve</strong> → <strong>Apply automatically</strong>. Check your GitHub repo — a branch named <code>auto-fix/…</code> and a PR should appear within 30 seconds.</p>
-          </div>
-        </div>
-
-        <Callout kind="tip" title="Cron will take over from here">
-          After the initial test, the system runs itself. The Thursday noon cron fires automatically once you have enough real learner feedback. The threshold (default 15) also auto-triggers synthesis mid-week if the course gets traffic.
-        </Callout>
+              </CodeBlock>
+              <Callout kind="tip" title="Safe to commit">
+                The anon key is designed to be public. Supabase RLS ensures browsers can only INSERT rows into <code>feedback</code> — they cannot read proposals or syntheses. Commit it freely.
+              </Callout>
+            </>),
+          },
+          {
+            label: "Push to GitHub — Vercel does the rest",
+            body: (<>
+              <p>Vercel auto-detects the <code>/api</code> folder as serverless functions and <code>vercel.json</code> as the cron schedule. One push wires everything:</p>
+              <Terminal
+                label="git — course repo"
+                lines={[
+                  { kind: "cmd",  text: "git add app.jsx" },
+                  { kind: "cmd",  text: 'git commit -m "wire Supabase credentials"' },
+                  { kind: "cmd",  text: "git push origin main" },
+                  { kind: "blank" },
+                  { kind: "out",  text: "Vercel detects push → builds..." },
+                  { kind: "ok",   text: "✓ Serverless functions: /api/synthesize, /api/apply" },
+                  { kind: "ok",   text: "✓ Cron job registered: 0 12 * * 4 (Thu 12:00 UTC)" },
+                  { kind: "ok",   text: "✓ Deployment live" },
+                ]}
+              />
+              <Callout kind="do" title="Verify in Vercel dashboard">
+                After deploy: <strong>Project → Functions tab</strong> should list <code>synthesize</code> and <code>apply</code>. <strong>Project → Cron Jobs tab</strong> should show Thursday 12:00 UTC. If Cron Jobs tab is missing, check that <code>vercel.json</code> is at the repo root.
+              </Callout>
+            </>),
+          },
+          {
+            label: "Test the full loop end-to-end",
+            body: (<>
+              <p>Submit a test rating, confirm the Supabase write, then trigger your first synthesis manually:</p>
+              <ol style={{ paddingLeft: 18, color: "var(--ink-2)", display: "flex", flexDirection: "column", gap: 12, marginTop: 12 }}>
+                <li><strong>Submit feedback</strong> — Rate any lesson. Open <strong>Supabase → Table Editor → feedback</strong>. A new row should appear with <code>synthesized = false</code>. If it doesn't, check that <code>SUPABASE_URL</code> and <code>SUPABASE_ANON_KEY</code> in <code>app.jsx</code> match your project.</li>
+                <li><strong>Unlock the admin dashboard</strong> — Click the <strong>"AI-Native Designer 101"</strong> brand logo in the sidebar <strong>five times in quick succession</strong> → enter your admin password → you're in.</li>
+                <li><strong>Run synthesis</strong> — Go to the <strong>Automations</strong> tab → click <strong>"Run synthesis now"</strong>. The manual trigger bypasses the 15-item threshold. A proposal should appear in the <strong>HITL Proposals</strong> tab within 10–15 seconds.</li>
+                <li><strong>Approve & auto-apply</strong> — Find a <strong>trivial</strong> proposal (moss-coloured badge) → click <strong>Approve</strong> → <strong>Apply automatically</strong>. A branch named <code>auto-fix/…</code> and a PR should appear in GitHub within 30 seconds.</li>
+              </ol>
+              <Callout kind="tip" title="Cron will take over from here">
+                After the initial test, the system runs itself. The Thursday noon cron fires automatically once you have enough real learner feedback. The threshold (default 15) also auto-triggers synthesis mid-week if the course gets traffic.
+              </Callout>
+            </>),
+          },
+        ]} />
 
       </section>
 
-      <Quiz
-        question="Which pattern best describes the /api/synthesize function in this architecture?"
-        options={[
-          "Prompt chaining — it passes output from one step to the next in sequence",
-          "Routing — it classifies feedback and sends it to different handlers",
-          "Augmented LLM — it uses external memory (Supabase) and produces structured output",
-          "Parallelization — it runs multiple LLM calls simultaneously",
-        ]}
-        correct={2}
-        explain="Correct. The synthesis function is an LLM augmented with retrieval (reads feedback from Supabase) and memory (writes proposals back). That's the Augmented LLM building block — the same pattern as Lesson 5's diagram."
-      />
+      <QuizTiered tiers={[
+        {
+          label: "Beginner",
+          question: "What does HITL mean in the course feedback loop?",
+          options: [
+            "A type of analytics dashboard",
+            "A programming language for AI agents",
+            "A checkpoint where a human reviews and approves AI-generated changes",
+            "The name of the Supabase database",
+          ],
+          correct: 2,
+          explain: "HITL — Human in the Loop — is a deliberate pause before the AI takes an irreversible action. A human reviews synthesis proposals before they become GitHub PRs, preventing the course from auto-editing in wrong directions.",
+        },
+        {
+          label: "Intermediate",
+          question: "Which pattern best describes the /api/synthesize function in this architecture?",
+          options: [
+            "Prompt chaining — it passes output from one step to the next in sequence",
+            "Routing — it classifies feedback and sends it to different handlers",
+            "Augmented LLM — it uses external memory (Supabase) and produces structured output",
+            "Parallelization — it runs multiple LLM calls simultaneously",
+          ],
+          correct: 2,
+          explain: "The synthesis function is an LLM augmented with retrieval (reads feedback from Supabase) and memory (writes proposals back). That's the Augmented LLM building block — same pattern as Lesson 5's diagram.",
+        },
+        {
+          label: "Advanced",
+          question: "Synthesis proposals are often too vague to act on. What architectural change would most improve proposal specificity?",
+          options: [
+            "Increase the feedback item count before triggering synthesis",
+            "Add a second LLM pass that grounds each proposal in a specific file and line range",
+            "Use a larger model for synthesis",
+            "Ask learners to write more detailed feedback",
+          ],
+          correct: 1,
+          explain: "Vague proposals come from vague grounding. A two-pass pattern — cluster semantically, then locate specifically — maps each proposal to the exact file and line the change would affect. That's the diff the auto-apply agent needs.",
+        },
+      ]} />
 
     </div>
   );
