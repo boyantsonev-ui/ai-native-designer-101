@@ -65,17 +65,11 @@ function pushFeedback(item) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function FeedbackPanel({ lessonId, lessonTitle }) {
-  const [tab,          setTab]          = useState("rate");
-  const [rating,       setRating]       = useState(0);
-  const [hoverStar,    setHoverStar]    = useState(0);
-  const [text,         setText]         = useState("");
-  const [submitted,    setSubmitted]    = useState(false);
-  const [chatHistory,  setChatHistory]  = useState([]);
-  const [chatInput,    setChatInput]    = useState("");
-  const [chatBusy,     setChatBusy]     = useState(false);
-  const chatEndRef = useRef(null);
+  const [rating,    setRating]    = useState(0);
+  const [hoverStar, setHoverStar] = useState(0);
+  const [text,      setText]      = useState("");
+  const [submitted, setSubmitted] = useState(false);
 
-  // Count responses already stored for this lesson
   const [responseCount, setResponseCount] = useState(
     () => loadFeedback().filter(f => f.lessonId === lessonId).length
   );
@@ -93,6 +87,79 @@ function FeedbackPanel({ lessonId, lessonTitle }) {
     setResponseCount(c => c + 1);
   };
 
+  return (
+    <div className="fp-wrap">
+      <div className="fp-head">
+        <span className="mono fp-title">Rate this lesson</span>
+        {responseCount > 0 && (
+          <span className="fp-count mono">
+            {responseCount} response{responseCount !== 1 ? "s" : ""}
+          </span>
+        )}
+      </div>
+
+      {submitted ? (
+        <div className="fp-thanks">
+          <span className="fp-thanks-icon">✓</span>
+          <div>
+            <strong>Thanks — feedback logged.</strong>
+            <p style={{ margin: "4px 0 0", color: "var(--ink-3)" }}>
+              The course team reviews all responses weekly and synthesizes improvements.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="fp-body">
+          <div className="fp-stars">
+            {[1, 2, 3, 4, 5].map(s => (
+              <button
+                key={s}
+                className={"fp-star" + (s <= (hoverStar || rating) ? " lit" : "")}
+                onMouseEnter={() => setHoverStar(s)}
+                onMouseLeave={() => setHoverStar(0)}
+                onClick={() => setRating(s)}
+                aria-label={`Rate ${s} star${s !== 1 ? "s" : ""}`}
+              >★</button>
+            ))}
+            {rating > 0 && (
+              <span className="mono fp-star-label">
+                {["", "Not useful", "Below expectations", "Decent", "Very good", "Excellent"][rating]}
+              </span>
+            )}
+          </div>
+          <textarea
+            className="fp-textarea"
+            rows={3}
+            placeholder="What worked? What was unclear or missing? (optional)"
+            value={text}
+            onChange={e => setText(e.target.value)}
+          />
+          <div className="fp-actions">
+            <button
+              className="btn btn-clay"
+              onClick={submitRating}
+              disabled={!rating && !text.trim()}
+            >
+              Submit feedback →
+            </button>
+            <span className="mono fp-note">Read by the course team · synthesized weekly</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Floating Ask Drawer
+// ─────────────────────────────────────────────────────────────────────────────
+
+function AskDrawer({ open, onClose, lessonId, lessonTitle }) {
+  const [chatHistory, setChatHistory] = useState([]);
+  const [chatInput,   setChatInput]   = useState("");
+  const [chatBusy,    setChatBusy]    = useState(false);
+  const chatEndRef = useRef(null);
+
   const sendChat = async () => {
     const q = chatInput.trim();
     if (!q || chatBusy) return;
@@ -103,7 +170,6 @@ function FeedbackPanel({ lessonId, lessonTitle }) {
       const system = `You are a concise, practical tutor for "AI-Native Designer 101", a living course about Claude, AI agents, MCP servers, and deploying with GitHub/Vercel — aimed at product designers. The learner is on Lesson ${lessonId}: "${lessonTitle}". Answer in 2–4 sentences max. Use plain language; no jargon without an explanation.`;
       const r = await window.claude.complete({ messages: [{ role: "user", content: system + "\n\n" + q }] });
       setChatHistory(h => [...h, { role: "ai", text: r }]);
-      // Record the conversation as feedback for synthesis
       pushFeedback({
         lessonId, lessonTitle,
         type: "chat",
@@ -111,7 +177,6 @@ function FeedbackPanel({ lessonId, lessonTitle }) {
         rating: null,
         sentiment: "neutral",
       });
-      setResponseCount(c => c + 1);
     } catch {
       setChatHistory(h => [...h, { role: "ai", text: "I'm not reachable right now — but your question has been logged for the course team." }]);
     } finally {
@@ -119,118 +184,51 @@ function FeedbackPanel({ lessonId, lessonTitle }) {
     }
   };
 
-  // Scroll chat to bottom on new message
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatHistory, chatBusy]);
 
   return (
-    <div className="fp-wrap">
-      <div className="fp-head">
-        <div className="fp-tabs">
-          <button className={"fp-tab" + (tab === "rate" ? " active" : "")} onClick={() => setTab("rate")}>
-            Rate this lesson
-          </button>
-          <button className={"fp-tab" + (tab === "chat" ? " active" : "")} onClick={() => setTab("chat")}>
-            Ask a question
-          </button>
+    <div className={"ask-drawer" + (open ? " open" : "")}>
+      <div className="ask-drawer-head">
+        <div>
+          <strong>Ask a question</strong>
+          <div className="mono">Lesson {String(lessonId).padStart(2, "0")} · {lessonTitle}</div>
         </div>
-        {responseCount > 0 && (
-          <span className="fp-count mono">
-            {responseCount} response{responseCount !== 1 ? "s" : ""}
-          </span>
-        )}
+        <button className="btn btn-ghost" onClick={onClose}>✕</button>
       </div>
-
-      {/* ── RATE TAB ── */}
-      {tab === "rate" && (
-        submitted ? (
-          <div className="fp-thanks">
-            <span className="fp-thanks-icon">✓</span>
-            <div>
-              <strong>Thanks — feedback logged.</strong>
-              <p style={{ margin: "4px 0 0", color: "var(--ink-3)" }}>
-                The course team reviews all responses weekly and synthesizes improvements.
-              </p>
-            </div>
+      <div className="ask-drawer-body">
+        {chatHistory.length === 0 && (
+          <div className="fp-chat-empty mono">
+            Ask anything about this lesson — a concept, an example, or "what does X mean here?"
           </div>
-        ) : (
-          <div className="fp-body">
-            <div className="fp-stars">
-              {[1, 2, 3, 4, 5].map(s => (
-                <button
-                  key={s}
-                  className={"fp-star" + (s <= (hoverStar || rating) ? " lit" : "")}
-                  onMouseEnter={() => setHoverStar(s)}
-                  onMouseLeave={() => setHoverStar(0)}
-                  onClick={() => setRating(s)}
-                  aria-label={`Rate ${s} star${s !== 1 ? "s" : ""}`}
-                >★</button>
-              ))}
-              {rating > 0 && (
-                <span className="mono fp-star-label">
-                  {["", "Not useful", "Below expectations", "Decent", "Very good", "Excellent"][rating]}
-                </span>
-              )}
-            </div>
-            <textarea
-              className="fp-textarea"
-              rows={3}
-              placeholder="What worked? What was unclear or missing? (optional)"
-              value={text}
-              onChange={e => setText(e.target.value)}
-            />
-            <div className="fp-actions">
-              <button
-                className="btn btn-clay"
-                onClick={submitRating}
-                disabled={!rating && !text.trim()}
-              >
-                Submit feedback →
-              </button>
-              <span className="mono fp-note">Read by the course team · synthesized weekly</span>
-            </div>
+        )}
+        {chatHistory.map((m, i) => (
+          <div key={i} className={"fp-msg fp-msg-" + m.role}>{m.text}</div>
+        ))}
+        {chatBusy && (
+          <div className="fp-msg fp-msg-ai fp-msg-thinking">
+            <span className="fp-dots"><i /><i /><i /></span>
           </div>
-        )
-      )}
-
-      {/* ── CHAT TAB ── */}
-      {tab === "chat" && (
-        <div className="fp-chat">
-          <div className="fp-chat-thread">
-            {chatHistory.length === 0 && (
-              <div className="fp-chat-empty mono">
-                Ask anything about this lesson — a concept, an example, or "what does X mean here?"
-              </div>
-            )}
-            {chatHistory.map((m, i) => (
-              <div key={i} className={"fp-msg fp-msg-" + m.role}>{m.text}</div>
-            ))}
-            {chatBusy && (
-              <div className="fp-msg fp-msg-ai fp-msg-thinking">
-                <span className="fp-dots"><i /><i /><i /></span>
-              </div>
-            )}
-            <div ref={chatEndRef} />
-          </div>
-          <div className="fp-chat-input">
-            <input
-              type="text"
-              placeholder="What's unclear, or what do you want to dig into?"
-              value={chatInput}
-              onChange={e => setChatInput(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && sendChat()}
-              disabled={chatBusy}
-              autoComplete="off"
-            />
-            <button
-              className="btn btn-clay fp-send"
-              onClick={sendChat}
-              disabled={chatBusy || !chatInput.trim()}
-            >→</button>
-          </div>
-        </div>
-      )}
+        )}
+        <div ref={chatEndRef} />
+      </div>
+      <div className="ask-drawer-input">
+        <input
+          type="text"
+          placeholder="What's unclear, or what do you want to dig into?"
+          value={chatInput}
+          onChange={e => setChatInput(e.target.value)}
+          onKeyDown={e => e.key === "Enter" && sendChat()}
+          disabled={chatBusy}
+          autoComplete="off"
+        />
+        <button
+          className="btn btn-clay fp-send"
+          onClick={sendChat}
+          disabled={chatBusy || !chatInput.trim()}
+        >→</button>
+      </div>
     </div>
   );
 }
@@ -1288,4 +1286,4 @@ function FeedbackNudge({ count, onOpenAdmin }) {
   );
 }
 
-Object.assign(window, { FeedbackPanel, AdminDashboard, AdminGate, FeedbackNudge, loadFeedback, exportFeedbackJSON, ADMIN_SESSION });
+Object.assign(window, { FeedbackPanel, AskDrawer, AdminDashboard, AdminGate, FeedbackNudge, loadFeedback, exportFeedbackJSON, ADMIN_SESSION });

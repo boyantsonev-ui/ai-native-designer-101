@@ -113,6 +113,59 @@ function Quiz({ question, options, correct, explain }) {
   );
 }
 
+// ---------- Tiered Quiz (Beginner / Intermediate / Advanced) ----------
+function QuizTiered({ tiers }) {
+  const [tier, setTier] = useState(0);
+  const [picked, setPicked] = useState([null, null, null]);
+
+  const t = tiers[tier];
+  const p = picked[tier];
+
+  const handlePick = (i) => {
+    if (p !== null) return;
+    setPicked(prev => prev.map((v, j) => j === tier ? i : v));
+  };
+
+  return (
+    <div className="quiz">
+      <div className="quiz-tiers">
+        {tiers.map((tr, i) => (
+          <button
+            key={i}
+            className={"quiz-tier-btn" + (tier === i ? " active" : "")}
+            onClick={() => setTier(i)}
+          >
+            {tr.label}
+          </button>
+        ))}
+      </div>
+      <div className="quiz-q">{t.question}</div>
+      <div className="quiz-opts">
+        {t.options.map((opt, i) => {
+          let cls = "quiz-opt";
+          if (p !== null) {
+            cls += " disabled";
+            if (i === t.correct) cls += " correct";
+            else if (i === p) cls += " wrong";
+          }
+          return (
+            <button key={i} className={cls} onClick={() => handlePick(i)} disabled={p !== null}>
+              <span className="marker">{String.fromCharCode(65 + i)}</span>
+              <span>{opt}</span>
+            </button>
+          );
+        })}
+      </div>
+      {p !== null && (
+        <div className="quiz-feedback">
+          {p === t.correct ? "✓ " : "Not quite — "}
+          {t.explain}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ---------- Terminal mock with typing ----------
 function Terminal({ label = "claude-code — zsh", lines, autoplay = true }) {
   const [step, setStep] = useState(autoplay ? 0 : lines.length);
@@ -639,6 +692,6 @@ function HeroCard({ eyebrow, title, lede, meta }) {
 }
 
 Object.assign(window, {
-  CodeBlock, CodeTabs, Callout, Quiz, Terminal, ChatMock, TryIt, Steps,
+  CodeBlock, CodeTabs, Callout, Quiz, QuizTiered, Terminal, ChatMock, TryIt, Steps,
   AgentDiagram, HeroCard, useInView, CourseOrchestrator,
 });

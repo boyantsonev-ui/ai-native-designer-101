@@ -34,7 +34,7 @@ const LESSONS = [
   { group: "Ship & measure", items: [
     { id: 11, title: "Deploy to GitHub & Vercel", Comp: () => <Lesson11 /> },
     { id: 12, title: "Measure with PostHog · Clarity · Hotjar", Comp: () => <Lesson12 /> },
-    { id: 13, title: "Wrap-up & cheat sheet", Comp: ({ onOpenCheatSheet }) => <Lesson13 onOpenCheatSheet={onOpenCheatSheet} /> },
+    { id: 13, title: "Wrap-up", Comp: () => <Lesson13 /> },
   ]},
   { group: "Meta", items: [
     { id: 14, title: "The course that teaches itself", Comp: () => <Lesson14 /> },
@@ -58,7 +58,7 @@ function saveState(s) {
 function App() {
   const [state,       setState]       = useState(loadState);
   const [openGloss,   setOpenGloss]   = useState(false);
-  const [openCheat,   setOpenCheat]   = useState(false);
+  const [openAsk,     setOpenAsk]     = useState(false);
   const [openAdmin,   setOpenAdmin]   = useState(false);
   const [openGate,    setOpenGate]    = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -181,7 +181,6 @@ function App() {
 
           <div className="sidebar-foot">
             <button className="btn" onClick={() => setOpenGloss(true)}>Glossary</button>
-            <button className="btn btn-clay" onClick={() => setOpenCheat(true)}>Cheat sheet</button>
           </div>
         </aside>
 
@@ -205,13 +204,12 @@ function App() {
             </div>
             <div className="header-actions">
               <button className="btn btn-ghost" onClick={() => setOpenGloss(true)}>Glossary</button>
-              <button className="btn" onClick={() => setOpenCheat(true)}>Cheat sheet</button>
             </div>
           </div>
 
           {/* Lesson content */}
           <div className="lesson" key={current.id}>
-            <Comp onOpenCheatSheet={() => setOpenCheat(true)} onNavigate={goTo} />
+            <Comp onNavigate={goTo} />
           </div>
 
           {/* ── Per-lesson feedback panel ── */}
@@ -237,17 +235,36 @@ function App() {
                 <div className="title">{next.title}</div>
               </div>
             ) : (
-              <div className="pager-card next" onClick={() => setOpenCheat(true)}>
-                <span className="mono">FINISH →</span>
-                <div className="title">Open cheat sheet</div>
+              <div className="pager-card next">
+                <span className="mono">FINISH ✓</span>
+                <div className="title">You've completed the course — well done.</div>
               </div>
             )}
           </div>
         </main>
       </div>
 
+      {/* Floating Ask button */}
+      <button
+        className="fab"
+        onClick={() => setOpenAsk(o => !o)}
+        aria-label={openAsk ? "Close Ask panel" : "Ask a question"}
+        title="Ask a question about this lesson"
+      >
+        {openAsk
+          ? <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 3l12 12M15 3L3 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+          : <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2C5.58 2 2 5.13 2 9c0 2.08.95 3.95 2.48 5.27L4 17l3.18-1.27C8.02 16.23 8.99 16.4 10 16.4c4.42 0 8-3.13 8-7s-3.58-7-8-7z" fill="currentColor" opacity=".9"/><circle cx="7" cy="9" r="1.1" fill="white"/><circle cx="10" cy="9" r="1.1" fill="white"/><circle cx="13" cy="9" r="1.1" fill="white"/></svg>
+        }
+      </button>
+
+      <AskDrawer
+        open={openAsk}
+        onClose={() => setOpenAsk(false)}
+        lessonId={current.id}
+        lessonTitle={current.title}
+      />
+
       {openGloss && <GlossaryModal   onClose={() => setOpenGloss(false)} />}
-      {openCheat && <CheatSheetModal onClose={() => setOpenCheat(false)} />}
       {openGate  && <AdminGate onUnlock={() => { setOpenGate(false); setOpenAdmin(true); }} onCancel={() => setOpenGate(false)} />}
       {openAdmin && <AdminDashboard  onClose={() => setOpenAdmin(false)} />}
     </>

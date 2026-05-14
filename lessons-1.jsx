@@ -38,17 +38,44 @@ const Lesson1 = ({ onNavigate }) => (
       </p>
     </section>
 
-    <Quiz
-      question="Which of these best describes the designer's new role?"
-      options={[
-        "Replace engineers and ship code yourself",
-        "Direct agents — describe intent, supply taste, verify output",
-        "Avoid AI tools to keep work pure",
-        "Use Claude only as a faster search bar",
-      ]}
-      correct={1}
-      explain="The leverage isn't in typing — it's in clearly stated intent, sharp taste, and judgment over what ships."
-    />
+    <QuizTiered tiers={[
+      {
+        label: "Beginner",
+        question: "What does 'prompt engineering' mean in design work?",
+        options: [
+          "Writing CSS and HTML with AI help",
+          "Crafting precise instructions that guide an AI agent's behaviour",
+          "Debugging broken design tokens",
+          "Exporting assets from Figma automatically",
+        ],
+        correct: 1,
+        explain: "Prompt engineering is writing clear, structured instructions — context, constraints, desired output format — so AI acts as a capable collaborator rather than a guessing assistant.",
+      },
+      {
+        label: "Intermediate",
+        question: "Which of these best describes the designer's new role?",
+        options: [
+          "Replace engineers and ship code yourself",
+          "Direct agents — describe intent, supply taste, verify output",
+          "Avoid AI tools to keep work pure",
+          "Use Claude only as a faster search bar",
+        ],
+        correct: 1,
+        explain: "The leverage isn't in typing — it's in clearly stated intent, sharp taste, and judgment over what ships.",
+      },
+      {
+        label: "Advanced",
+        question: "An agent ships a feature the designer didn't anticipate. What systemic practice best prevents repeated surprises?",
+        options: [
+          "Add more rules to the system prompt",
+          "Review agent traces and encode successful patterns as Skills",
+          "Switch from autonomous to supervised mode permanently",
+          "Reduce the agent's tool access",
+        ],
+        correct: 1,
+        explain: "Reviewing traces and extracting patterns as Skills closes the feedback loop. Piling rules into prompts creates fragile instructions without systematic improvement.",
+      },
+    ]} />
   </>
 );
 
@@ -186,17 +213,44 @@ The auth flow (screens 1–2) is locked pending legal review.`}
       hint="↳ runs in your browser"
     />
 
-    <Quiz
-      question="What's the key difference between Chat mode and Cowork mode?"
-      options={[
-        "Cowork uses a more powerful model",
-        "Chat is for short messages; Cowork is for long ones",
-        "Cowork lets Claude use tools and take actions while you steer each step — Chat is pure conversation",
-        "Cowork requires a paid plan; Chat is free",
-      ]}
-      correct={2}
-      explain="Cowork is the collaborative middle ground: Claude has tools and can act, but you're directing closely at every step — not handing off an autonomous task."
-    />
+    <QuizTiered tiers={[
+      {
+        label: "Beginner",
+        question: "In Claude Desktop, what does a tool call look like in the conversation?",
+        options: [
+          "A pop-up window asking for your approval",
+          "A small inline block showing which action Claude took",
+          "A separate terminal window that opens",
+          "A code block at the bottom of the chat",
+        ],
+        correct: 1,
+        explain: "Tool calls appear inline in the conversation thread — a compact block showing the tool name and result. You can follow exactly what Claude did without leaving the chat.",
+      },
+      {
+        label: "Intermediate",
+        question: "What's the key difference between Chat mode and Cowork mode?",
+        options: [
+          "Cowork uses a more powerful model",
+          "Chat is for short messages; Cowork is for long ones",
+          "Cowork lets Claude use tools and take actions while you steer each step — Chat is pure conversation",
+          "Cowork requires a paid plan; Chat is free",
+        ],
+        correct: 2,
+        explain: "Cowork is the collaborative middle ground: Claude has tools and can act, but you're directing closely at every step — not handing off an autonomous task.",
+      },
+      {
+        label: "Advanced",
+        question: "You're building an MCP tool that reads Figma variables and writes a JSON token file. The model sometimes interprets variable modes inconsistently. What's the most reliable fix?",
+        options: [
+          "Increase the system prompt's instruction length",
+          "Define a strict JSON Schema as the MCP tool's output spec",
+          "Upgrade to a larger model",
+          "Add more example Figma files to the context",
+        ],
+        correct: 1,
+        explain: "A structured output schema forces the model to fit its interpretation into a defined shape — eliminating ambiguity about how modes are represented and making the output machine-readable.",
+      },
+    ]} />
   </>
 );
 
@@ -406,17 +460,44 @@ Read the latest Vercel preview URL from the last deploy log.
       </p>
     </Callout>
 
-    <Quiz
-      question="What is a Claude Code routine, technically?"
-      options={[
-        "A third-party automation service you connect via webhook",
-        "A .md file in .claude/commands/ with a schedule: cron field — Claude executes it on schedule or on demand",
-        "A sub-agent that runs permanently in the background",
-        "A GitHub Action that calls Claude via API",
-      ]}
-      correct={1}
-      explain="Routines are command files. The schedule is a cron expression. No third-party service required — Claude Code reads a markdown file on a timer."
-    />
+    <QuizTiered tiers={[
+      {
+        label: "Beginner",
+        question: "What is Claude Code primarily used for?",
+        options: [
+          "Creating visual mockups in the terminal",
+          "Generating slide decks from text prompts",
+          "Making code and file changes directly in your project",
+          "Hosting websites on a server",
+        ],
+        correct: 2,
+        explain: "Claude Code runs as an agentic loop in your terminal — it reads your files, writes changes, runs tests, and iterates. It operates on your actual codebase, not a copy.",
+      },
+      {
+        label: "Intermediate",
+        question: "What is a Claude Code routine, technically?",
+        options: [
+          "A third-party automation service you connect via webhook",
+          "A .md file in .claude/commands/ with a schedule: cron field — Claude executes it on schedule or on demand",
+          "A sub-agent that runs permanently in the background",
+          "A GitHub Action that calls Claude via API",
+        ],
+        correct: 1,
+        explain: "Routines are command files. The schedule is a cron expression. No third-party service required — Claude Code reads a markdown file on a timer.",
+      },
+      {
+        label: "Advanced",
+        question: "What is the most impactful thing to put in CLAUDE.md for design-system tasks?",
+        options: [
+          "A list of component names",
+          "The full CSS token file contents",
+          "Token naming conventions and component authoring patterns",
+          "The recent git log",
+        ],
+        correct: 2,
+        explain: "CLAUDE.md loads at session start as persistent context. Authoring conventions and naming rules — not just file lists — give the agent reliable constraints it applies consistently across every task.",
+      },
+    ]} />
   </>
 );
 
@@ -532,17 +613,44 @@ parent/.claude/skills/    # inherited — monorepo root`}
       />
     </section>
 
-    <Quiz
-      question="Why use Skills instead of pasting the same instructions into every chat?"
-      options={[
-        "Skills are encrypted",
-        "Skills load only when needed, version with your repo, and let teammates reuse your taste",
-        "Skills run faster",
-        "Skills bypass the rate limit",
-      ]}
-      correct={1}
-      explain="Skills are versioned, discoverable, and shareable — the closest thing to a design system for prompting."
-    />
+    <QuizTiered tiers={[
+      {
+        label: "Beginner",
+        question: "What is a Skill (slash command) in Claude Code?",
+        options: [
+          "A built-in Claude feature like summarization",
+          "A saved set of instructions you can run with a /command",
+          "A plugin downloaded from a marketplace",
+          "A type of MCP server",
+        ],
+        correct: 1,
+        explain: "A Skill is a Markdown file with a prompt template saved in .claude/commands/. Typing /<name> runs those instructions — your repeatable workflow, stored as a versioned file.",
+      },
+      {
+        label: "Intermediate",
+        question: "Why use Skills instead of pasting the same instructions into every chat?",
+        options: [
+          "Skills are encrypted",
+          "Skills load only when needed, version with your repo, and let teammates reuse your taste",
+          "Skills run faster",
+          "Skills bypass the rate limit",
+        ],
+        correct: 1,
+        explain: "Skills are versioned, discoverable, and shareable — the closest thing to a design system for prompting.",
+      },
+      {
+        label: "Advanced",
+        question: "A Skill works well in isolation but fails in a multi-file refactor. What's the most likely root cause?",
+        options: [
+          "The Skill file is too long",
+          "Claude Code doesn't support multi-file edits",
+          "The Skill lacks context about file relationships and naming conventions",
+          "Skills can only be invoked once per session",
+        ],
+        correct: 2,
+        explain: "Skills don't automatically know your project's architecture. Adding a 'project context' section — which files relate to which, what conventions apply — gives the agent scope to handle cross-file work correctly.",
+      },
+    ]} />
   </>
 );
 
