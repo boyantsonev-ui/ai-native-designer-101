@@ -700,8 +700,8 @@ function remapRow(f) {
 }
 
 function AdminDashboard({ onClose }) {
-  const [feedback,   setFeedback]   = useState(() => loadFeedback());
-  const [syntheses,  setSyntheses]  = useState(() => loadSyntheses());
+  const [feedback,   setFeedback]   = useState([]);
+  const [syntheses,  setSyntheses]  = useState([]);
   const [proposals,  setProposals]  = useState([]);
   const [view,       setView]       = useState("overview");
   const [synthBusy,  setSynthBusy]  = useState(false);
