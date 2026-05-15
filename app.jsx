@@ -25,6 +25,7 @@ const LESSONS = [
     { id: 5,  title: "Agents — what Anthropic means", Comp: () => <Lesson5 /> },
     { id: 6,  title: "Sub-agents & orchestrators", Comp: () => <Lesson6 /> },
     { id: 7,  title: "Autonomous agents", Comp: () => <Lesson7 /> },
+    { id: 15, title: "Context & cost", Comp: () => <Lesson15 /> },
   ]},
   { group: "Wiring", items: [
     { id: 8,  title: "MCP — the protocol", Comp: () => <Lesson8 /> },

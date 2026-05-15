@@ -2,7 +2,7 @@
 
 const Lesson5 = () => (
   <>
-    <div className="eyebrow">Lesson 05 · Foundations</div>
+    <div className="eyebrow">Foundations</div>
     <h1 style={{ marginTop: 14, marginBottom: 18 }}>Agents — what Anthropic actually means</h1>
     <p className="lede">
       "Agent" is the most overloaded word in tech. Anthropic's research <em>Building effective agents</em> draws a clean line: <strong>workflows</strong> are LLMs orchestrated by code. <strong>Agents</strong> are LLMs that orchestrate themselves. Both are useful — knowing which you need is the skill.
@@ -74,7 +74,7 @@ const Lesson5 = () => (
 
 const Lesson6 = () => (
   <>
-    <div className="eyebrow">Lesson 06 · Foundations</div>
+    <div className="eyebrow">Foundations</div>
     <h1 style={{ marginTop: 14, marginBottom: 18 }}>Sub-agents & the orchestrator pattern</h1>
     <p className="lede">
       Once a single Claude is doing too many jobs at once, split it. The orchestrator pattern keeps a "lead" model planning and delegating, while focused sub-agents do narrow, well-scoped work.
@@ -165,7 +165,7 @@ and summarize relevant information for the lead agent.
 
 const Lesson7 = () => (
   <>
-    <div className="eyebrow">Lesson 07 · Foundations</div>
+    <div className="eyebrow">Foundations</div>
     <h1 style={{ marginTop: 14, marginBottom: 18 }}>The autonomous agent — and when to use one</h1>
     <p className="lede">
       An agent, in the strict sense, is an LLM that decides its own next step in a loop until the goal is met. They're powerful and expensive — like a contractor with a key to your office.
@@ -247,7 +247,7 @@ const Lesson7 = () => (
 
 const Lesson8 = () => (
   <>
-    <div className="eyebrow">Lesson 08 · Wiring</div>
+    <div className="eyebrow">Wiring</div>
     <h1 style={{ marginTop: 14, marginBottom: 18 }}>MCP — the USB-C of AI tools</h1>
     <p className="lede">
       The Model Context Protocol is an open standard for connecting an LLM to anything: a database, a SaaS API, a local file. Once a service speaks MCP, every MCP-aware host (Claude Desktop, Claude Code, Cursor, Zed…) can use it.
@@ -341,100 +341,276 @@ const Lesson8 = () => (
 const Lesson9 = () => (
   <>
     <div className="eyebrow">Lesson 09 · Wiring</div>
-    <h1 style={{ marginTop: 14, marginBottom: 18 }}>Figma MCP — designs as conversation</h1>
+    <h1 style={{ marginTop: 14, marginBottom: 18 }}>Figma MCP — two tools, different jobs</h1>
     <p className="lede">
-      With the Figma MCP, your design file becomes a queryable resource. Claude can read frames, components, variables, comments — and turn them into code, copy, audits, or tickets. The Figma Console MCP adds the missing other half: live inspection of running pages so Claude can compare design vs. reality.
+      Two MCP servers connect AI agents to Figma, but they solve different problems at different stages of the design workflow. Knowing which to reach for — and when to combine them — is the skill.
     </p>
 
     <section>
-      <h3>Two complementary servers</h3>
+      <h3>Two servers, two makers</h3>
       <div className="two-col">
         <div className="cheat-card">
+          <div className="eyebrow">Official · by Figma Inc.</div>
           <h5>Figma MCP</h5>
-          <p><span className="mono">@figma/mcp-server</span> — reads files, frames, variables, components from your Figma workspace.</p>
+          <p>
+            Hosted remotely — no desktop app required. Built for design-to-code workflows. Reads files, frames, variables, and components. Supports write (in beta) on paid plans. Powers{" "}
+            <a href="https://www.figma.com/developers/code-connect" target="_blank" rel="noopener">Code Connect</a> for linking components to production code.
+          </p>
+          <p style={{ marginTop: 8 }}>
+            <strong>Works in:</strong> Cursor, VS Code, Windsurf, Claude Code, Codex
+          </p>
+          <p style={{ marginTop: 6 }}>
+            <a href="https://www.figma.com/developers/mcp" target="_blank" rel="noopener">Docs →</a>
+            {" · "}
+            <a href="https://www.npmjs.com/package/@figma/mcp-server" target="_blank" rel="noopener">npm →</a>
+          </p>
         </div>
         <div className="cheat-card">
+          <div className="eyebrow">Console MCP · by Southleft</div>
           <h5>Figma Console MCP</h5>
-          <p>Inspects the live deployed page in a headless browser — DOM, computed styles, console logs — so Claude can diff design vs. built.</p>
+          <p>
+            Third-party server by <a href="https://southleft.com" target="_blank" rel="noopener">Southleft</a>. Runs via a paired Figma desktop plugin, giving agents full plugin API access. Covers the phases the official MCP doesn't: audit, accessibility, version history, and arbitrary execution via <code>figma_execute</code>.
+          </p>
+          <p style={{ marginTop: 8 }}>
+            <strong>Works in:</strong> Claude.ai, any MCP client (requires Figma desktop)
+          </p>
         </div>
       </div>
     </section>
 
     <section>
-      <h3>What "designs as conversation" looks like</h3>
+      <h3>What each one can do</h3>
+
+      <div className="cheat-card" style={{ marginTop: 16 }}>
+
+        <div className="cc-item">
+          <div className="eyebrow">Design system audit</div>
+          <h4>Console MCP only</h4>
+          <p>
+            Parity checks, token drift detection, component consistency linting. The official MCP can read tokens; it can't audit them. Use Console MCP to catch divergence before handoff.
+          </p>
+        </div>
+
+        <div className="cc-item">
+          <div className="eyebrow">Accessibility</div>
+          <h4>Console MCP only</h4>
+          <p>
+            <a href="https://www.w3.org/TR/WCAG22/" target="_blank" rel="noopener">WCAG 2.2</a> linting via <a href="https://github.com/dequelabs/axe-core" target="_blank" rel="noopener">axe-core</a>. Run a full accessibility audit against your Figma frames in one prompt. Official MCP has no accessibility tooling.
+          </p>
+        </div>
+
+        <div className="cc-item">
+          <div className="eyebrow">Code generation</div>
+          <h4>Official MCP only</h4>
+          <p>
+            IDE-native output in Cursor, VS Code, and Claude Code. Pair with <a href="https://www.figma.com/developers/code-connect" target="_blank" rel="noopener">Code Connect</a> to map Figma components to your actual production components — not generic HTML. Console MCP has no role here.
+          </p>
+        </div>
+
+        <div className="cc-item">
+          <div className="eyebrow">Version history</div>
+          <h4>Console MCP only</h4>
+          <p>
+            Diff, blame-style history, and changelog generation across file versions. Useful for release notes, stakeholder reports, and tracking who changed what between reviews.
+          </p>
+        </div>
+
+        <div className="cc-item">
+          <div className="eyebrow">Write to canvas</div>
+          <h4>Console MCP (reliable) · Official (beta)</h4>
+          <p>
+            Console MCP has full, stable node creation and manipulation. Official MCP write capabilities are in active beta — full seats on paid plans only. Expect gaps and breaking changes as the official API evolves.
+          </p>
+        </div>
+
+        <div className="cc-item">
+          <div className="eyebrow">Arbitrary plugin execution</div>
+          <h4>Console MCP only</h4>
+          <p>
+            <code>figma_execute</code> exposes the full Figma plugin API to Claude. Anything you could write in a Figma plugin, Claude can now do in a chat. No equivalent in the official MCP.
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+    <section>
+      <h3>When to use which</h3>
+
+      <div className="cheat-card" style={{ marginTop: 16 }}>
+
+        <div className="cc-item">
+          <div className="eyebrow">Official MCP</div>
+          <h4>Generate code from designs in your IDE</h4>
+          <p>Built exactly for this. Pair with <a href="https://www.figma.com/developers/code-connect" target="_blank" rel="noopener">Code Connect</a> in Cursor or VS Code for production-accurate output that maps to your real component library — not generic divs.</p>
+        </div>
+
+        <div className="cc-item">
+          <div className="eyebrow">Console MCP</div>
+          <h4>Audit for token drift, inconsistency, or accessibility failures</h4>
+          <p>Full audit suite: design parity checks, <a href="https://www.w3.org/TR/WCAG22/" target="_blank" rel="noopener">WCAG 2.2</a> linting, component consistency, version diff. This is Console's home ground.</p>
+        </div>
+
+        <div className="cc-item">
+          <div className="eyebrow">Console MCP</div>
+          <h4>Use Claude.ai to run agentic design workflows</h4>
+          <p>The official MCP is restricted to whitelisted clients (Cursor, VS Code, Claude Code). Console MCP is open — it works in Claude.ai and any MCP-compatible client.</p>
+        </div>
+
+        <div className="cc-item">
+          <div className="eyebrow">Console MCP</div>
+          <h4>Automate changelogs or CI-style design quality checks</h4>
+          <p>Version diff, blame history, and <code>figma_execute</code> for custom verification workflows are Console-exclusive. Build the design quality gate your team has been asking for.</p>
+        </div>
+
+        <div className="cc-item">
+          <div className="eyebrow">Either — context-dependent</div>
+          <h4>Create or update Figma components using your design system</h4>
+          <p>Official MCP with skills is the safer bet for most teams. Console MCP if you need stable writes today or full plugin API access. Both can read design system context.</p>
+        </div>
+
+      </div>
+    </section>
+
+    <section>
+      <h3>Where each tool lives in the workflow</h3>
+      <div className="cheat-card" style={{ marginTop: 16 }}>
+        <div className="cc-item">
+          <div className="eyebrow">Design & Composition</div>
+          <h4>Console MCP leads, Official is catching up</h4>
+          <p>Console MCP has reliable write — full node creation and manipulation. Official write is in beta. For agentic canvas manipulation today, Console MCP is the practical choice.</p>
+        </div>
+        <div className="cc-item">
+          <div className="eyebrow">Design System</div>
+          <h4>Console MCP owns this phase</h4>
+          <p>Audit, lint, token CRUD, accessibility checks, version history. Official handles the code-side linkage via Code Connect. Run both together for complete coverage.</p>
+        </div>
+        <div className="cc-item">
+          <div className="eyebrow">Handoff</div>
+          <h4>Official MCP was built for this</h4>
+          <p>Design context → structured code specs, readable by IDEs. Console MCP is read-only at handoff. This is where the official MCP's IDE-native integration pays off.</p>
+        </div>
+        <div className="cc-item">
+          <div className="eyebrow">Review & Post-Ship</div>
+          <h4>Console MCP closes the loop</h4>
+          <p>Compare what shipped vs. what was designed. Accessibility checks, design parity reports, changelog — all Console. Official MCP has no post-ship role.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h3>What a combined session looks like</h3>
       <ChatMock
         title="Claude · figma + figma-console"
         messages={[
-          { role: "user", text: "Compare the Settings page on production vs. the latest Figma frame. Where did we drift?" },
+          { role: "user", text: "Compare the Settings page on production vs. the latest Figma frame. Where did we drift? Also run an accessibility check on the design." },
           { role: "ai",
-            toolCall: { name: "figma.get_node('Settings · v8')", body: "→ pulled tokens, layout, copy" },
-            text: "Got the design. Now checking production." },
+            toolCall: { name: "figma.get_node('Settings · v8')", body: "→ pulled tokens, layout, copy, components" },
+            text: "Got the design. Running Console audit now." },
           { role: "ai",
-            toolCall: { name: "figma_console.inspect('app.acme.com/settings')", body: "→ rendered DOM, 12 components" },
-            text: "Three drift points: (1) Section spacing is 24px in design, 16px in prod. (2) The 'Danger zone' header uses --rose-700 in Figma but --red-600 in code. (3) The mobile breakpoint hides the avatar at 480px in prod; design keeps it. Want me to open a Linear ticket per item?" },
+            toolCall: { name: "figma_console.audit_accessibility('Settings · v8')", body: "→ 3 WCAG 2.2 violations: missing focus ring (AA), contrast ratio 3.1:1 on helper text (AA fail), icon without label" },
+            text: "Three accessibility issues found. Also checking against production for drift." },
+          { role: "ai",
+            toolCall: { name: "figma_console.diff_versions('v7', 'v8')", body: "→ spacing.section: 24px → 16px, color.danger: --rose-700 → --red-600, mobile avatar: visible → hidden" },
+            text: "Three drift points between design v8 and production: (1) Section spacing is 24px in design, 16px in prod. (2) Danger zone header uses --rose-700 in Figma, --red-600 in code. (3) Avatar hidden at 480px in prod — design keeps it visible. Want a Linear ticket per issue?" },
         ]}
       />
     </section>
 
     <section>
-      <h3>Schema — what a Figma resource looks like</h3>
-      <CodeBlock filename="figma-resource.json" lang="json">
-{`{
-  "node_id": "1024:88",
-  "name": "Settings · v8 / Profile",
-  "type": "FRAME",
-  "tokens": {
-    "spacing.section": "24px",
-    "color.danger.heading": "var(--rose-700)"
-  },
-  "components": ["Avatar", "InputRow", "DangerZone"],
-  "comments": [
-    { "author": "Lia", "text": "Avatar should stay on mobile" }
-  ]
-}`}
-      </CodeBlock>
+      <h3>Setup</h3>
+      <CodeTabs files={[
+        {
+          name: "Official Figma MCP",
+          lang: "json",
+          code: `{
+  "mcpServers": {
+    "figma": {
+      "command": "npx",
+      "args": ["-y", "@figma/mcp-server"],
+      "env": { "FIGMA_TOKEN": "figd_..." }
+    }
+  }
+}`,
+        },
+        {
+          name: "Console MCP (Claude Desktop)",
+          lang: "json",
+          code: `{
+  "mcpServers": {
+    "figma-console": {
+      "command": "npx",
+      "args": ["-y", "@southleft/figma-mcp"],
+      "env": { "FIGMA_TOKEN": "figd_..." }
+    }
+  }
+}`,
+        },
+        {
+          name: "Both together",
+          lang: "json",
+          code: `{
+  "mcpServers": {
+    "figma": {
+      "command": "npx",
+      "args": ["-y", "@figma/mcp-server"],
+      "env": { "FIGMA_TOKEN": "figd_..." }
+    },
+    "figma-console": {
+      "command": "npx",
+      "args": ["-y", "@southleft/figma-mcp"],
+      "env": { "FIGMA_TOKEN": "figd_..." }
+    }
+  }
+}`,
+        },
+      ]} />
     </section>
 
+    <Callout kind="warn" title="Official write is in active beta">
+      As of mid-2026, the Official Figma MCP's write capabilities require full seats on paid plans and are still evolving rapidly. Expect API changes. For stable programmatic writes today, Console MCP is the more reliable option. Check the <a href="https://www.figma.com/developers/mcp" target="_blank" rel="noopener">official changelog</a> before building write-heavy workflows on the official server.
+    </Callout>
+
     <Callout kind="do" title="Designer leverage">
-      <p style={{ margin: 0 }}>Once Figma is on MCP, the source of truth becomes <em>the file</em> again — not a Storybook fork or screenshots in a Linear ticket. Drift becomes detectable. Reviews become quantitative.</p>
+      Once Figma is on MCP, the source of truth becomes <em>the file</em> again — not a Storybook fork or screenshots in a Linear ticket. Drift becomes detectable. Accessibility becomes auditable. Reviews become quantitative.
     </Callout>
 
     <QuizTiered tiers={[
       {
         label: "Beginner",
-        question: "What does connecting the Figma MCP to Claude Desktop let you do?",
+        question: "What is the main difference between the Official Figma MCP and the Console MCP?",
         options: [
-          "Export Figma files to PDF automatically",
-          "Ask Claude questions about your designs directly in chat",
-          "Edit Figma components from the terminal",
-          "Sync Figma to GitHub automatically",
+          "The official MCP is free; the Console MCP requires a paid plan",
+          "The official MCP is made by Figma Inc. and optimised for IDE code generation; the Console MCP is by Southleft and covers audit, write, and accessibility",
+          "The Console MCP only reads Figma files; the official MCP can edit them",
+          "They are identical — the Console MCP is just an older version",
         ],
         correct: 1,
-        explain: "The Figma MCP exposes your file's nodes, styles, and variables as tools Claude can call. Instead of copying specs manually, you ask 'What tokens does this component use?' and Claude reads the answer directly.",
+        explain: "Two different makers, two different jobs. Official MCP (Figma Inc.) is built for design-to-code handoff in IDEs. Console MCP (Southleft) is built for audit, manipulation, accessibility, and anything requiring the full Figma plugin API.",
       },
       {
         label: "Intermediate",
-        question: "What does the Figma Console MCP add on top of the Figma MCP?",
+        question: "A designer wants to run a WCAG 2.2 accessibility audit on a Figma file using Claude. Which server makes this possible?",
         options: [
-          "It edits Figma files programmatically",
-          "It generates icons",
-          "It inspects the live, rendered product so Claude can compare design vs. built",
-          "It exports to PNG faster",
+          "The Official Figma MCP — it includes an accessibility scanner",
+          "Neither — accessibility auditing requires a dedicated plugin, not an MCP",
+          "The Console MCP — it runs WCAG 2.2 checks via axe-core",
+          "Both servers support accessibility auditing equally",
         ],
         correct: 2,
-        explain: "Console-side inspection closes the loop — design intent vs. shipped reality, in one chat.",
+        explain: "WCAG 2.2 auditing via axe-core is a Console MCP exclusive. The Official Figma MCP has no accessibility tooling. Console MCP's full plugin API access is what makes this possible.",
       },
       {
         label: "Advanced",
-        question: "7 components are using hardcoded hex values instead of tokens. What's the most efficient single-prompt workflow?",
+        question: "Your team wants Claude to: (1) generate React components from Figma using your Code Connect mappings, and (2) flag any frames failing WCAG AA. What's the correct setup?",
         options: [
-          "Export all components to JSON, fix manually, re-import",
-          "List each component in Claude, fix one at a time",
-          "Audit via Figma MCP, then apply fixes via Console MCP in one agentic session",
-          "Write a Figma plugin to find and replace hardcoded values",
+          "Official MCP only — Code Connect handles both needs",
+          "Console MCP only — it has full capabilities",
+          "Official MCP for code generation with Code Connect, Console MCP for the WCAG audit — run both servers simultaneously",
+          "Neither — this workflow requires a custom Figma plugin, not MCP",
         ],
         correct: 2,
-        explain: "Combining read (Figma MCP) and write (Console MCP) in one agent session is the power pattern. Claude audits the entire file with one pass and applies all fixes in the same context — no export/import loop.",
+        explain: "Code Connect and IDE-native code generation are Official MCP's speciality. WCAG auditing is Console MCP's speciality. Both can run simultaneously in Claude Code — the agent decides which tool to call for each sub-task.",
       },
     ]} />
   </>

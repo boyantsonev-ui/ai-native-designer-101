@@ -329,3 +329,261 @@ const SUPABASE_ANON_KEY = "eyJhbGci...your-anon-key-here";`}
     </div>
   );
 }
+
+function Lesson15() {
+  return (
+    <div>
+
+      <HeroCard
+        eyebrow="Foundations · Lesson 15"
+        title="Context & cost"
+        lede="Every message costs more than the one before it — not because you asked something harder, but because Claude re-reads every prior turn first. Here's how to work with that constraint instead of against it."
+        meta={["6 min read", "Context management", "Cost optimisation"]}
+      />
+
+      <section>
+        <h2>Why message 50 costs more than message 5</h2>
+        <p>
+          The single biggest cost driver in a Claude Code session isn't the complexity of your request — it's the size of the conversation Claude has to re-read before it can answer. Every message Claude sends requires processing the entire conversation from the top: your system prompt, every tool call, every file Claude read, every MCP response. Message 50 is expensive because Claude reads 49 prior turns before generating a single token of reply.
+        </p>
+        <p>
+          This also means that every file read, every tool result, and every subagent output you pull into the main session stays there for the rest of the session. The context window fills up not from hard questions — but from accumulated history.
+        </p>
+        <Callout kind="note" title="The cost unit isn't the message">
+          You're not paying per question. You're paying for the full context Claude processes to answer it. A short question at turn 80 of a heavy session costs more than a complex question at turn 3.
+        </Callout>
+      </section>
+
+      <section>
+        <h2>Diagnose before you optimise</h2>
+        <p>
+          Before tuning anything, find out where your tokens are actually going. Run <code>/context</code> — it shows a breakdown of your context window: system prompt, tools definitions, memory files, skills, and conversation history. If memory files are eating 15% of your window before the first task, that's fixable. If tool definitions are the culprit, you can disable unused MCP servers.
+        </p>
+        <CodeBlock lang="bash" filename="Claude Code">
+{`/context`}
+        </CodeBlock>
+        <p>
+          The status bar at the bottom of the terminal also shows token percentage in real time. Build the habit of glancing at it before starting each new task — it tells you how much working room you have left before things start getting expensive or before Claude starts dropping earlier context.
+        </p>
+        <Callout kind="tip" title="Red flags to watch for">
+          Memory files consuming more than 10% before you've started, tool definitions from MCP servers you're not using this session, and conversation history that includes large file reads you no longer need. Each is independently fixable.
+        </Callout>
+      </section>
+
+      <section>
+        <h2>CLAUDE.md — signal, not noise</h2>
+        <p>
+          CLAUDE.md loads before Claude reads your code, before it reads your task, before anything. It persists in the context window for the entire session and is never lazy-loaded or evicted. Whatever you put there, Claude pays for on every single turn.
+        </p>
+        <CodeBlock lang="md" filename="CLAUDE.md — what belongs">
+{`# Project: [name]
+
+## Commands
+- Install: npm install
+- Dev: npm run dev
+- Test: npm test
+- Lint: npm run lint
+
+## Conventions
+- Use pnpm, not npm
+- Tailwind utility classes only — no inline styles
+- No default exports
+
+## Architecture
+- /src/components — presentational only
+- /src/features — domain logic
+- /api — serverless functions (Vercel)
+
+## Directories to avoid
+- /legacy — deprecated, do not read or edit
+- /vendor — third-party, do not modify`}
+        </CodeBlock>
+        <Callout kind="warn" title="5,000 tokens, every turn">
+          A 5,000-token CLAUDE.md costs 5,000 tokens on every single message — whether you send 2 or 200. Meeting notes, design history, and implementation guides do not belong there. Put only what Claude needs to work correctly in this repo: how to run things, what to avoid, and non-obvious constraints.
+        </Callout>
+        <p>
+          You can also use CLAUDE.md to explicitly list which files are safe to read and which directories are off-limits. This prevents Claude from pulling in large irrelevant files during exploration.
+        </p>
+      </section>
+
+      <section>
+        <h2>Compact early, clear cleanly</h2>
+        <p>
+          <code>/compact</code> summarises the conversation history into a condensed snapshot, then continues from there. It dramatically shrinks the re-reading cost on all future turns. The key is timing: don't wait until you're near the context limit. Compact after completing a discrete sub-task, before starting the next one — think of it as checkpointing.
+        </p>
+        <Terminal
+          label="Claude Code — /compact workflow"
+          lines={[
+            { kind: "cmd",  text: "Before we compact — note that we chose optimistic locking for the cart merge, and the API is at /api/cart/merge." },
+            { kind: "out",  text: "Got it. I'll preserve that decision in the summary." },
+            { kind: "blank" },
+            { kind: "cmd",  text: "/compact" },
+            { kind: "out",  text: "Compacting conversation..." },
+            { kind: "ok",   text: "✓ Condensed 47 turns → 1 summary block" },
+            { kind: "ok",   text: "✓ Preserved: optimistic locking decision, /api/cart/merge endpoint" },
+            { kind: "out",  text: "Context window: 68% → 8%" },
+          ]}
+        />
+        <p>
+          Before running <code>/compact</code>, tell Claude which decisions matter: <em>"Note that we chose to use optimistic locking for the cart merge..."</em> This shapes what the compaction summary captures, so critical context doesn't get silently dropped.
+        </p>
+        <p>
+          Use <code>/clear</code> when switching to completely unrelated work. It starts a fresh session with no history — cheaper than compacting when the prior context has zero bearing on the next task.
+        </p>
+      </section>
+
+      <section>
+        <h2>Explore in a separate window</h2>
+        <p>
+          When Claude researches an unfamiliar codebase, it reads lots of files. Every one of those reads lands in your main context and stays there. The fix: delegate exploration to a subagent with a phrase like <em>"use subagents to investigate X."</em> The subagent explores in its own context window, reads what it needs, and reports back a summary. Your main session gets the findings without inheriting the file contents.
+        </p>
+        <Callout kind="do" title="Subagents are context firewalls">
+          Use subagents whenever you're about to pull in a large volume of read-only information — codebase archaeology, documentation research, dependency audits. The subagent pays the file-read cost; your session only pays for the summary it returns.
+        </Callout>
+      </section>
+
+      <section>
+        <h2>Right model for the job</h2>
+        <p>
+          On API billing, Opus costs roughly 5× more per token than Sonnet. Defaulting to Opus for everything isn't just expensive — it's slower for tasks that don't need deep reasoning.
+        </p>
+
+        <div className="two-col" style={{ marginTop: 16 }}>
+          <div className="cheat-card">
+            <h5>Claude Sonnet</h5>
+            <p>Default for everything. Code generation, refactoring, content writing, most implementation work. The right starting point for every session.</p>
+          </div>
+          <div className="cheat-card">
+            <h5>Claude Haiku</h5>
+            <p>Quick lookups, renaming, formatting, and anything repetitive. Fastest and cheapest — use it whenever depth isn't required.</p>
+          </div>
+          <div className="cheat-card">
+            <h5>Claude Opus</h5>
+            <p>Complex architecture decisions, deep multi-file analysis, and reasoning-heavy refactors. Switch here deliberately, not by default.</p>
+          </div>
+          <div className="cheat-card">
+            <h5>opusplan alias</h5>
+            <p>Uses Opus during plan mode for complex reasoning, then automatically switches to Sonnet for implementation. Best of both without paying Opus rates throughout.</p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Hygiene: MCP, files, and sessions</h2>
+        <p>
+          <strong>MCP servers.</strong> Each enabled MCP server adds tool definitions to your context window — before any work begins. Keep fewer than 10 enabled per project. Where possible, prefer CLI equivalents: <code>gh</code> instead of the GitHub MCP, <code>aws</code> instead of the AWS MCP. Use <code>/mcp</code> to disable servers you don't need for the current task.
+        </p>
+        <p>
+          <strong>File reads.</strong> A common context sink is pulling a 500-line file when you only need 20 lines. Scope reads narrowly. Filter test output to failures only. Avoid reformatting requests ("rewrite this as bullets") that burn tokens without changing meaning. If a directory is irrelevant to the current task, add it to <code>.claudeignore</code> — Claude won't touch it.
+        </p>
+        <p>
+          <strong>Sessions.</strong> Name sessions with <code>/rename</code> and treat them like branches — one session per workstream. Use <code>claude --continue</code> to pick up the most recent session, or <code>claude --resume</code> to choose from a list. Mixing unrelated tasks in one session inflates context without benefit.
+        </p>
+        <p>
+          <strong>The last 20% rule.</strong> Never start complex, multi-file work when the context window is more than 80% full. Memory-intensive operations — refactoring, feature implementation, debugging across components — require headroom. When you're running low, compact first.
+        </p>
+        <Callout kind="note" title="Prompt caching is on by default">
+          Claude Code uses prompt caching to reduce costs and latency on repeated context. Leave it enabled. Only disable it (<code>DISABLE_PROMPT_CACHING=1</code>) when benchmarking or debugging cache behaviour — it meaningfully cuts costs in production use.
+        </Callout>
+      </section>
+
+      <section>
+        <h2>Quick reference</h2>
+
+        <div className="cheat-card" style={{ marginTop: 16 }}>
+
+          <div className="cc-item">
+            <div className="eyebrow">Diagnose</div>
+            <h4>Don't know where tokens are going</h4>
+            <p>Run <code>/context</code> for a full breakdown by category: system prompt, tools, memory, skills, conversation.</p>
+          </div>
+
+          <div className="cc-item">
+            <div className="eyebrow">Compact</div>
+            <h4>Context growing mid-task</h4>
+            <p>Run <code>/compact</code> at task breakpoints — after completing a sub-task, before starting the next. Tell Claude what to preserve first.</p>
+          </div>
+
+          <div className="cc-item">
+            <div className="eyebrow">Clear</div>
+            <h4>Switching to unrelated work</h4>
+            <p>Use <code>/clear</code> to start fresh. Don't compact history that has zero relevance to the next task.</p>
+          </div>
+
+          <div className="cc-item">
+            <div className="eyebrow">Subagents</div>
+            <h4>Researching a large codebase</h4>
+            <p>"Use subagents to investigate X." The subagent reads; your session gets only the summary.</p>
+          </div>
+
+          <div className="cc-item">
+            <div className="eyebrow">Model selection</div>
+            <h4>Over-paying per token</h4>
+            <p>Default to Sonnet. Use Haiku for quick tasks. Switch to Opus only for deep analysis or complex reasoning.</p>
+          </div>
+
+          <div className="cc-item">
+            <div className="eyebrow">MCP</div>
+            <h4>Tool definitions eating context</h4>
+            <p>Disable unused servers with <code>/mcp</code>. Prefer CLI tools (<code>gh</code>, <code>aws</code>) over MCP equivalents where available.</p>
+          </div>
+
+          <div className="cc-item">
+            <div className="eyebrow">CLAUDE.md</div>
+            <h4>Repeated re-explanation</h4>
+            <p>Move stable context (commands, conventions, forbidden dirs) to CLAUDE.md. Keep it lean — it loads on every turn.</p>
+          </div>
+
+          <div className="cc-item">
+            <div className="eyebrow">File reads</div>
+            <h4>Reads eating context</h4>
+            <p>Scope reads narrowly. Add irrelevant directories to <code>.claudeignore</code>. Filter test output to failures only.</p>
+          </div>
+
+        </div>
+      </section>
+
+      <QuizTiered tiers={[
+        {
+          label: "Beginner",
+          question: "What does /compact do in a Claude Code session?",
+          options: [
+            "Deletes all files Claude has read to free up disk space",
+            "Summarises conversation history into a condensed snapshot, shrinking the context Claude re-reads on future turns",
+            "Switches to a smaller, cheaper model for the rest of the session",
+            "Clears the terminal output without affecting the conversation",
+          ],
+          correct: 1,
+          explain: "/compact condenses your conversation history into a summary block. Claude continues from that summary, so every subsequent turn re-reads far less — cutting cost and latency without losing the thread of what you were working on.",
+        },
+        {
+          label: "Intermediate",
+          question: "Why does message 50 in a session cost more tokens to process than message 5?",
+          options: [
+            "Claude uses a larger model automatically as sessions get longer",
+            "Token prices increase with session length on the Anthropic API",
+            "Claude re-reads the entire conversation — all 49 prior turns — before generating each new reply",
+            "The system prompt grows larger as Claude learns your preferences",
+          ],
+          correct: 2,
+          explain: "Claude doesn't maintain state between turns — it re-processes the full context from the top every time. Message 50 is expensive because it includes 49 prior messages, all tool outputs, and every file that was read during the session.",
+        },
+        {
+          label: "Advanced",
+          question: "You need to explore an unfamiliar 200-file codebase before writing any code. Which approach best preserves your main session's context budget?",
+          options: [
+            "Read each file one at a time in the main session, using /compact between each read",
+            "Ask Claude to summarise the repo structure from git log and file names only",
+            "Delegate exploration to a subagent — it reads files in a separate context window and returns a summary",
+            "Use /clear before exploring so the reads don't accumulate with earlier context",
+          ],
+          correct: 2,
+          explain: "Subagents are context firewalls. The subagent pays the file-read cost in its own window; your main session only receives the summary. /compact helps but doesn't prevent the initial file-read bloat. /clear throws away useful earlier context unnecessarily.",
+        },
+      ]} />
+
+    </div>
+  );
+}
+
+Object.assign(window, { Lesson14, Lesson15 });
