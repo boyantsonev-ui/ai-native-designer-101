@@ -199,8 +199,6 @@ function App() {
                   : <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="1" width="6" height="16" rx="2" stroke="currentColor" strokeWidth="1.4"/><rect x="9" y="4" width="8" height="1.4" rx=".7" fill="currentColor"/><rect x="9" y="8.3" width="8" height="1.4" rx=".7" fill="currentColor"/><rect x="9" y="12.6" width="8" height="1.4" rx=".7" fill="currentColor"/></svg>
                 }
               </button>
-              <span className="mono">LESSON {String(current.id).padStart(2, "0")}</span>
-              <span className="sep">/</span>
               <strong>{current.title}</strong>
             </div>
             <div className="header-actions">
@@ -226,13 +224,13 @@ function App() {
           <div className="pager">
             {prev ? (
               <div className="pager-card" onClick={() => goTo(prev.id)}>
-                <span className="mono">← PREVIOUS · LESSON {String(prev.id).padStart(2, "0")}</span>
+                <span className="mono">← PREVIOUS</span>
                 <div className="title">{prev.title}</div>
               </div>
             ) : <div />}
             {next ? (
               <div className="pager-card next" onClick={() => goTo(next.id)}>
-                <span className="mono">NEXT · LESSON {String(next.id).padStart(2, "0")} →</span>
+                <span className="mono">NEXT →</span>
                 <div className="title">{next.title}</div>
               </div>
             ) : (
@@ -250,7 +248,7 @@ function App() {
         className="fab"
         onClick={() => setOpenAsk(o => !o)}
         aria-label={openAsk ? "Close Ask panel" : "Ask a question"}
-        title="Ask a question about this lesson"
+        title="Ask a question"
       >
         {openAsk
           ? <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 3l12 12M15 3L3 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>

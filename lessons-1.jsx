@@ -81,7 +81,7 @@ const Lesson1 = ({ onNavigate }) => (
 
 const Lesson2 = () => (
   <>
-    <div className="eyebrow">Lesson 02 · Tools</div>
+    <div className="eyebrow">Tools</div>
     <h1 style={{ marginTop: 14, marginBottom: 18 }}>Three surfaces — Chat, Cowork, Code</h1>
     <p className="lede">
       The Claude desktop app has three modes at the top of every window: <strong>Chat</strong>, <strong>Cowork</strong>, and <strong>Code</strong>. Each sits at a different point on the control spectrum — from pure conversation to fully autonomous action. Knowing which to reach for is half the skill.
@@ -100,7 +100,7 @@ const Lesson2 = () => (
         </div>
         <div className="cheat-card">
           <h5>Code</h5>
-          <p>Agentic. Claude runs a loop — plan, act, observe, repeat — on your repo autonomously. You approve the plan; it executes. Lesson 3 covers this in depth.</p>
+          <p>Agentic. Claude runs a loop — plan, act, observe, repeat — on your repo autonomously. You approve the plan; it executes. Claude Code covers this in depth.</p>
         </div>
       </div>
       <Callout kind="note" title="Same app, three gears">
@@ -190,7 +190,7 @@ The auth flow (screens 1–2) is locked pending legal review.`}
         </div>
         <div className="cheat-card">
           <h5>Not the right mode when…</h5>
-          <p>The task is purely conversational (use Chat) · or the task is "go build the whole feature" (use Code — Lesson 3). Cowork is for tasks you want to <em>steer</em> as they happen.</p>
+          <p>The task is purely conversational (use Chat) · or the task is "go build the whole feature" (use Code — see Claude Code). Cowork is for tasks you want to <em>steer</em> as they happen.</p>
         </div>
       </div>
       <ChatMock
@@ -256,7 +256,7 @@ The auth flow (screens 1–2) is locked pending legal review.`}
 
 const Lesson3 = () => (
   <>
-    <div className="eyebrow">Lesson 03 · Tools</div>
+    <div className="eyebrow">Tools</div>
     <h1 style={{ marginTop: 14, marginBottom: 18 }}>Claude Code — pair-coding without code</h1>
     <p className="lede">
       Claude Code is a terminal-native agent. You point it at a folder, describe an outcome, and it reads, edits, runs, and commits. For designers, it's the bridge from a Figma idea to a working prototype URL — without translating to engineer.
@@ -503,7 +503,7 @@ Read the latest Vercel preview URL from the last deploy log.
 
 const Lesson4 = () => (
   <>
-    <div className="eyebrow">Lesson 04 · Tools</div>
+    <div className="eyebrow">Tools</div>
     <h1 style={{ marginTop: 14, marginBottom: 18 }}>Skills — packaging your taste</h1>
     <p className="lede">
       A Skill is a folder of instructions Claude loads on demand. Think of it as a reusable brief: name, description, steps, examples, and any reference files. Once written, every future chat can invoke it.

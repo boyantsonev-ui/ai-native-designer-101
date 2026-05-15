@@ -340,7 +340,7 @@ const Lesson8 = () => (
 
 const Lesson9 = () => (
   <>
-    <div className="eyebrow">Lesson 09 · Wiring</div>
+    <div className="eyebrow">Wiring</div>
     <h1 style={{ marginTop: 14, marginBottom: 18 }}>Figma MCP — two tools, different jobs</h1>
     <p className="lede">
       Two MCP servers connect AI agents to Figma, but they solve different problems at different stages of the design workflow. Knowing which to reach for — and when to combine them — is the skill.

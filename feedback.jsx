@@ -90,7 +90,7 @@ function FeedbackPanel({ lessonId, lessonTitle }) {
   return (
     <div className="fp-wrap">
       <div className="fp-head">
-        <span className="mono fp-title">Rate this lesson</span>
+        <span className="mono fp-title">Rate this</span>
         {responseCount > 0 && (
           <span className="fp-count mono">
             {responseCount} response{responseCount !== 1 ? "s" : ""}
@@ -167,7 +167,7 @@ function AskDrawer({ open, onClose, lessonId, lessonTitle }) {
     setChatHistory(h => [...h, { role: "user", text: q }]);
     setChatBusy(true);
     try {
-      const system = `You are a concise, practical tutor for "AI-Native Designer 101", a living course about Claude, AI agents, MCP servers, and deploying with GitHub/Vercel — aimed at product designers. The learner is on Lesson ${lessonId}: "${lessonTitle}". Answer in 2–4 sentences max. Use plain language; no jargon without an explanation.`;
+      const system = `You are a concise, practical tutor for "AI-Native Designer 101", a living course about Claude, AI agents, MCP servers, and deploying with GitHub/Vercel — aimed at product designers. The learner is on "${lessonTitle}". Answer in 2–4 sentences max. Use plain language; no jargon without an explanation.`;
       const r = await window.claude.complete({ messages: [{ role: "user", content: system + "\n\n" + q }] });
       setChatHistory(h => [...h, { role: "ai", text: r }]);
       pushFeedback({
@@ -193,14 +193,14 @@ function AskDrawer({ open, onClose, lessonId, lessonTitle }) {
       <div className="ask-drawer-head">
         <div>
           <strong>Ask a question</strong>
-          <div className="mono">Lesson {String(lessonId).padStart(2, "0")} · {lessonTitle}</div>
+          <div className="mono">{lessonTitle}</div>
         </div>
         <button className="btn btn-ghost" onClick={onClose}>✕</button>
       </div>
       <div className="ask-drawer-body">
         {chatHistory.length === 0 && (
           <div className="fp-chat-empty mono">
-            Ask anything about this lesson — a concept, an example, or "what does X mean here?"
+            Ask anything — a concept, an example, or "what does X mean here?"
           </div>
         )}
         {chatHistory.map((m, i) => (
@@ -284,7 +284,7 @@ function HITLCard({ proposal, onApprove, onDismiss, onApplyAuto, applyBusy }) {
           <span className="hitl-type-tag">{proposal.type}</span>
           <span className="hitl-title">{proposal.title}</span>
           <span className="mono hitl-lesson-tag">
-            L{String(proposal.lessonId).padStart(2, "0")}
+            {proposal.lessonTitle || proposal.lesson_title}
           </span>
         </div>
         <div className="hitl-card-aside">
@@ -1014,7 +1014,7 @@ Group related feedback into one proposal rather than many tiny ones. Omit noise.
               {/* Per-lesson breakdown */}
               {Object.keys(byLesson).length > 0 && (
                 <>
-                  <div className="admin-section-hd mono" style={{ marginTop: 28 }}>Feedback by lesson</div>
+                  <div className="admin-section-hd mono" style={{ marginTop: 28 }}>Feedback by step</div>
                   <div className="lesson-fb-list">
                     {Object.entries(byLesson)
                       .sort((a, b) => Number(a[0]) - Number(b[0]))
@@ -1027,9 +1027,6 @@ Group related feedback into one proposal rather than many tiny ones. Omit noise.
                             onClick={() => { setLessonFilter(lid); setView("feedback"); }}
                           >
                             <div className="lesson-fb-info">
-                              <span className="mono" style={{ color: "var(--ink-3)" }}>
-                                L{String(lid).padStart(2, "0")}
-                              </span>
                               <span className="lesson-fb-name">{items[0]?.lessonTitle}</span>
                             </div>
                             <div className="lesson-fb-right">
@@ -1047,7 +1044,7 @@ Group related feedback into one proposal rather than many tiny ones. Omit noise.
 
               {feedback.length === 0 && (
                 <div className="admin-empty">
-                  No feedback yet. Responses appear here as learners complete and rate lessons.
+                  No feedback yet. Responses appear here as learners complete and rate steps.
                 </div>
               )}
             </div>
@@ -1058,7 +1055,7 @@ Group related feedback into one proposal rather than many tiny ones. Omit noise.
             <div>
               <div className="admin-filter-row">
                 <span className="mono" style={{ color: "var(--ink-3)" }}>Filter:</span>
-                {[{ id: "all", label: "All" }, ...Object.keys(byLesson).sort((a, b) => Number(a) - Number(b)).map(id => ({ id, label: `L${id}` }))].map(opt => (
+                {[{ id: "all", label: "All" }, ...Object.keys(byLesson).sort((a, b) => Number(a) - Number(b)).map(id => ({ id, label: lessonMap[id] || id }))].map(opt => (
                   <button
                     key={opt.id}
                     className={"btn btn-ghost" + (lessonFilter === opt.id ? " admin-nav-active" : "")}
@@ -1073,7 +1070,7 @@ Group related feedback into one proposal rather than many tiny ones. Omit noise.
                 <div key={f.id} className={"fb-item" + (f.synthesized ? " fb-synthesized" : "")}>
                   <div className="fb-item-head">
                     <span className="mono" style={{ color: "var(--ink-3)" }}>
-                      L{String(f.lessonId).padStart(2, "0")} · {f.lessonTitle}
+                      {f.lessonTitle}
                     </span>
                     <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                       {f.rating && (
@@ -1100,7 +1097,7 @@ Group related feedback into one proposal rather than many tiny ones. Omit noise.
 
               {filteredFeedback.length === 0 && (
                 <div className="admin-empty" style={{ padding: "20px 0" }}>
-                  No feedback for this lesson yet.
+                  No feedback for this step yet.
                 </div>
               )}
             </div>
